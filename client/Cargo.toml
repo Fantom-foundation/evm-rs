@@ -16,7 +16,7 @@ env_logger = "0.6.0"
 log = "0.4.6"
 rand = "0.4"
 uuid = { version = "0.7", features = ["serde", "v4"] }
-rocket = "0.4.0"
+rocket = "0.4.2"
 rpassword = "2.1.0"
 openssl = "0.10.15"
 serde = "1.0.82"
