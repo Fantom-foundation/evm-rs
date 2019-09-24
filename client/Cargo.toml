@@ -12,7 +12,7 @@ etcommon-trie = "0.4"
 etcommon-block = "0.5.1"
 etcommon-rlp = "0.2"
 devp2p-secp256k1 = { version = "0.5.6" }
-env_logger = "0.6.0"
+env_logger = "0.6.2"
 log = "0.4.6"
 rand = "0.4"
 uuid = { version = "0.7", features = ["serde", "v4"] }
