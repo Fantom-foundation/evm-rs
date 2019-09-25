@@ -1,6 +1,6 @@
 //! Contains the Transaction module
 
-use bigint::{U256, H160};
+use ethereum_types::{U256, H160};
 use serde::{Serialize, Serializer};
 use serde::ser::SerializeStruct;
 pub mod pool;

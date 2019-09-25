@@ -1,12 +1,13 @@
 #![allow(dead_code)]
 #![allow(clippy::many_single_char_names)]
 
-use bigint_miner::{H256, H512, H64, U256};
+use ethereum_types::{H256, H512, H64, U256};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
 use sha3::{Digest, Keccak256, Keccak512};
 use std::ops::BitXor;
 
 use super::miller_rabin::is_prime;
+use futures_util::stream::StreamExt;
 
 const DATASET_BYTES_INIT: usize = 1_073_741_824; // 2 to the power of 30.
 const DATASET_BYTES_GROWTH: usize = 8_388_608; // 2 to the power of 23.
@@ -62,7 +63,7 @@ fn fill_sha256(input: &[u8], a: &mut [u8], from_index: usize) {
 pub fn make_cache(cache: &mut [u8], seed: H256) {
     assert!(cache.len() % HASH_BYTES == 0);
     let n = cache.len() / HASH_BYTES;
-    fill_sha512(&seed, cache, 0);
+    fill_sha512(seed.as_ref(), cache, 0);
     for i in 1..n {
         let (last, next) = cache.split_at_mut(i * 64);
         fill_sha512(&last[(last.len() - 64)..], next, 0);
@@ -273,8 +274,13 @@ pub fn mine(
 
     let mut nonce_current = nonce_start;
     loop {
+        let data = Keccak256::digest(&header);
+        let mut h256_parts = [0u8; 32];
+        for (i, b) in data.iter().enumerate() {
+            h256_parts[i] = *b;
+        }
         let (_, result) = hashimoto(
-            H256::from(Keccak256::digest(&header).as_slice()),
+            H256::from(&h256_parts),
             nonce_current,
             full_size,
             |i| {
@@ -285,12 +291,12 @@ pub fn mine(
                 H512::from(r)
             },
         );
-        let result_cmp: U256 = result.into();
+        let tmp: [u8; 32] = result.into();
+        let result_cmp: U256 = U256::from(&tmp);
         if result_cmp <= target {
             return (nonce_current, result);
         }
-        let nonce_u64: u64 = nonce_current.into();
-        nonce_current = H64::from(nonce_u64 + 1);
+        nonce_current = H64::from_low_u64_ne(nonce_current.to_low_u64_ne() + 1);
     }
 }
 
@@ -301,7 +307,7 @@ pub fn get_seedhash(epoch: usize) -> H256 {
     for _i in 0..epoch {
         fill_sha256(&s.clone(), &mut s, 0);
     }
-    H256::from(s.as_ref())
+    H256::from(&s)
 }
 
 #[cfg(test)]

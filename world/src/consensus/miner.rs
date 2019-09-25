@@ -1,6 +1,6 @@
-use bigint_miner;
 use block;
 use consensus::ethash;
+use ethereum_types;
 
 #[derive(Default)]
 pub struct Miner;
@@ -10,7 +10,7 @@ impl Miner {
         Miner {}
     }
 
-    pub fn mine(&self, header: &block::Header, epoch: usize) -> (bigint_miner::H64, bigint_miner::H256) {
+    pub fn mine(&self, header: &block::Header, epoch: usize) -> (ethereum_types::H64, ethereum_types::H256) {
         println!("Getting sizes...");
         let full_size = ethash::get_full_size(epoch);
         let cache_size = ethash::get_cache_size(epoch);
@@ -28,9 +28,9 @@ impl Miner {
         ethash::make_dataset(&mut dataset, &cache);
         println!("Dataset done");
         let diff = header.difficulty.as_u32();
-        let difficulty = bigint_miner::U256::from(diff);
+        let difficulty = ethereum_types::U256::from(diff);
         println!("Mining difficulty is: {:?}", difficulty);
-        ethash::mine(header, full_size, &dataset, bigint_miner::H64::random(), difficulty)
+        ethash::mine(header, full_size, &dataset, ethereum_types::H64::random(), difficulty)
     }
 }
 

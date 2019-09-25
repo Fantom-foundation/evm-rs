@@ -5,7 +5,7 @@ extern crate bigint;
 extern crate block;
 extern crate bloom;
 extern crate byteorder;
-extern crate ethereum_miner as bigint_miner;
+extern crate ethereum_types;
 extern crate fvm;
 extern crate rkv;
 extern crate rlp;
@@ -14,6 +14,7 @@ extern crate serde_json;
 extern crate sha3;
 extern crate tempdir;
 extern crate trie;
+extern crate futures_util;
 
 pub mod blocks;
 pub mod chain;

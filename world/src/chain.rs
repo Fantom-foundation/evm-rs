@@ -26,7 +26,7 @@ impl BlockChain {
         }
     }
 
-    pub fn mine(&mut self) -> (bigint_miner::H64, bigint_miner::H256) {
+    pub fn mine(&mut self) -> (ethereum_types::H64, ethereum_types::H256) {
         let tmp_block: block::Header = (*self.genesis_block.clone()).into();
         self.miner.mine(&tmp_block, 1)
     }

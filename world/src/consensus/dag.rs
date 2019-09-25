@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use bigint_miner::{H256, H64, U256};
+use ethereum_types::{H256, H64, U256};
 use consensus::ethash;
 use std::marker::PhantomData;
 pub trait Patch {
