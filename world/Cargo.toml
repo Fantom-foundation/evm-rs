@@ -12,6 +12,7 @@ etcommon-rlp = "0.2.4"
 etcommon-block = "0.5.1"
 ethereum-types = "0.7.0"
 futures-util-preview = "0.3.0-alpha.17"
+futures-preview = { version = "=0.3.0-alpha.17", features = ["async-await", "nightly"] }
 tempdir = "0.3.7"
 rkv = "0.7.0"
 serde = "1.0.82"
