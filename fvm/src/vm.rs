@@ -4,6 +4,7 @@ use bigint::{Address, H256, M256, MI256, U256};
 use errors::{Result, VMError};
 use eth_log::Log;
 use keccak_hash::keccak;
+use libvm::Cpu;
 use memory::{Memory, SimpleMemory};
 use opcodes::Opcode;
 use storage::Storage;
@@ -403,20 +404,20 @@ impl VM {
                 }
             }
             Opcode::PUSH(bytes) => {
-                let range = &self.code[self.pc + 1..self.pc + 1 + bytes];
+                let range = &self.code[self.pc + 1..self.pc + 1 + bytes as usize];
                 self.registers[self.stack_pointer] = M256::from(range);
                 self.stack_pointer += 1;
-                self.pc += bytes + 1;
+                self.pc += bytes as usize + 1;
             }
             Opcode::DUP(bytes) => {
-                let val = self.registers[bytes - 1];
+                let val = self.registers[bytes as usize - 1];
                 self.registers[self.stack_pointer] = val;
             }
             Opcode::SWAP(bytes) => {
                 let val1 = self.registers[self.stack_pointer - 1];
-                let val2 = self.registers[bytes - 1];
+                let val2 = self.registers[bytes as usize - 1];
                 self.registers[self.stack_pointer - 1] = val2;
-                self.registers[bytes - 1] = val1;
+                self.registers[bytes as usize - 1] = val1;
             }
             Opcode::LOG(bytes) => {
                 self.stack_pointer -= 1;
@@ -426,7 +427,7 @@ impl VM {
                     let data = mem.copy_from_memory(index.into(), len.into());
                     let mut topics: Vec<H256> = Vec::new();
                     for _ in 0..bytes {
-                        let pointer = self.stack_pointer + (bytes + 1);
+                        let pointer = self.stack_pointer + (bytes as usize + 1);
                         topics.push(H256::from(self.registers[pointer]));
                     }
                     println!("Pushing logs");

@@ -9,5 +9,7 @@ etcommon-trie = "0.4"
 etcommon-block = "0.5.1"
 etcommon-rlp = "0.2"
 env_logger = "0.6.0"
+failure = "0.1.5"
+libvm = { git = "https://github.com/Fantom-foundation/libvm" }
 log = "0.4.6"
 keccak-hash = "0.1.2"

@@ -1,3 +1,6 @@
+use failure::Error;
+use libvm::Instruction;
+
 type Gas = u32;
 
 /// Opcodes supported by the Ethereum VM. https://github.com/trailofbits/evm-opcodes is a good
@@ -61,10 +64,10 @@ pub enum Opcode {
     MSIZE,
     GAS,
     JUMPDEST,
-    PUSH(usize),
-    DUP(usize),
-    SWAP(usize),
-    LOG(usize),
+    PUSH(u64),
+    DUP(u64),
+    SWAP(u64),
+    LOG(u64),
     INVALID,
     SUICIDE,
     CREATE,
@@ -72,6 +75,18 @@ pub enum Opcode {
     CALLCODE,
     RETURN,
     DELEGATECALL,
+}
+
+impl Instruction for Opcode {
+    fn size(&self) -> Result<usize, Error> {
+        Ok(match self {
+            Opcode::PUSH(_) | Opcode::DUP(_) | Opcode::SWAP(_) | Opcode::LOG(_) => 9,
+            _ => 1,
+        })
+    }
+    fn get_cycles(&self) -> Result<usize, Error> {
+        Ok(1)
+    }
 }
 
 // Converts a byte into an Opcode for convenience
