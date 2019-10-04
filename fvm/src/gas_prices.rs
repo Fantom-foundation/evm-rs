@@ -43,12 +43,7 @@ pub fn get_cost(op: Opcode) -> Option<usize> {
         | Opcode::DUP(_)
         | Opcode::SWAP(_) => Some(3),
 
-        Opcode::MUL
-        | Opcode::DIV
-        | Opcode::SDIV
-        | Opcode::MOD
-        | Opcode::SMOD
-        | Opcode::SIGNEXTEND => Some(5),
+        Opcode::MUL | Opcode::DIV | Opcode::SDIV | Opcode::MOD | Opcode::SMOD | Opcode::SIGNEXTEND => Some(5),
 
         Opcode::ADDMOD | Opcode::MULMOD => Some(8),
         Opcode::EXP => Some(10),

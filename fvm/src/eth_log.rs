@@ -1,6 +1,6 @@
 //! Contains the Log data structure
 
-use bigint::{Address, Gas, B256, H256, H64, U256};
+use bigint::{Address, H256};
 use rlp::{Decodable, DecoderError, Encodable, RlpStream, UntrustedRlp};
 
 /// A Log entry for the EVM
@@ -15,7 +15,7 @@ impl Log {
     /// Creates and returns a new Log entry
     pub fn new(address: Address) -> Log {
         Log {
-            address: address,
+            address,
             topics: vec![],
             data: vec![],
         }

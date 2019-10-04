@@ -1,10 +1,11 @@
 //! Module that contains the VM that executes bytecode
 
 use bigint::{Address, H256, M256, MI256, U256};
+use tiny_keccak::Keccak;
+
 use errors::{Result, VMError};
 use eth_log::Log;
-use keccak_hash::keccak;
-use libvm::Cpu;
+// use libvm::Cpu;
 use memory::{Memory, SimpleMemory};
 use opcodes::Opcode;
 use storage::Storage;
@@ -13,7 +14,7 @@ use storage::Storage;
 pub struct VM {
     address: Option<Address>,
     registers: [M256; 1024],
-    memory: Option<Box<Memory>>,
+    memory: Option<Box<dyn Memory>>,
     storage: Option<Storage>,
     code: Vec<u8>,
     pc: usize,
@@ -285,15 +286,18 @@ impl VM {
                 let offset = self.registers[self.stack_pointer];
                 let size = self.registers[self.stack_pointer - 1];
                 if let Some(ref mut mem) = self.memory {
-                    let k = keccak(mem.read_slice(offset.into(), size.into()));
+                    let mut sha3 = Keccak::new_sha3_256();
+                    sha3.update(mem.read_slice(offset.into(), size.into()));
+                    let mut k: [u8; 32] = [0; 32];
+                    sha3.finalize(&mut k);
                     println!("k is: {:?}", k);
-                    self.registers[self.stack_pointer - 1] = M256::from(&*k);
+                    self.registers[self.stack_pointer - 1] = M256::from(k);
                     self.pc += 1;
                 }
             }
             Opcode::ADDRESS => {
-                if let Some(addr) = self.address {
-                    self.registers[self.stack_pointer] = addr.clone().into();
+                if self.address.is_some() {
+                    self.registers[self.stack_pointer] = self.address.unwrap().clone().into();
                 }
             }
             Opcode::BALANCE => unimplemented!(),
@@ -801,5 +805,4 @@ mod tests {
         assert!(vm.execute_one().is_ok());
         assert!(vm.execute_one().is_ok());
     }
-
 }

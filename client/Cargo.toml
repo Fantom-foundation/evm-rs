@@ -1,35 +1,35 @@
 [package]
 name = "client"
 version = "0.1.0"
-authors = ["Fletcher Haynes <fletcher@capitalprawn.com>"]
+authors = ["Agustin Chiappe Berrini <jnieve@gmail.com>"]
 
 [dependencies]
-clap = {version = "~2.32.0", features = ["yaml"]}
+clap = { version = "2.33.0", features = ["yaml"] }
 fvm = { path = "../fvm" }
 world = { path = "../world" }
 etcommon-bigint = "0.2.10"
-etcommon-trie = "0.4"
+etcommon-trie = "0.4.0"
 etcommon-block = "0.5.1"
-etcommon-rlp = "0.2"
-devp2p-secp256k1 = { version = "0.5.6" }
-env_logger = "0.6.2"
-log = "0.4.6"
-rand = "0.4"
-uuid = { version = "0.7", features = ["serde", "v4"] }
+etcommon-rlp = "0.2.4"
+devp2p-secp256k1 = "0.5.6"
+env_logger = "0.7.0"
+log = "0.4.8"
+rand = "0.7.2"
+uuid = { version = "0.7.4", features = ["serde", "v4"] }
 rocket = "0.4.2"
-rpassword = "2.1.0"
-openssl = "0.10.15"
-serde = "1.0.82"
-serde_json = "1.0.33"
-serde_derive = "1.0.82"
+rpassword = "4.0.1"
+openssl = "0.10.25"
+serde = "1.0.101"
+serde_json = "1.0.41"
+serde_derive = "1.0.101"
 pbkdf2 = "0.3.0"
-hmac = "0.7.0"
+hmac = "0.7.1"
 sha2 = "0.8.0"
 rustc-serialize = "0.3.24"
-sha3 = "0.8.1"
+sha3 = "0.8.2"
 crypto-mac = "0.7.0"
-base64 = "0.10.0"
-byteorder = "1.2.7"
+base64 = "0.10.1"
+byteorder = "1.3.2"
 mac = "0.1.1"
-chrono = { version = "0.4", features = ["serde"] }
+chrono = { version = "0.4.9", features = ["serde"] }
 ethash = "0.3.1"

@@ -1,6 +1,6 @@
 name: FVM Client
 version: "0.1"
-author: Fletcher Haynes <fletcher@capitalprawn.com>
+author: Agustin Chiappe Berrini <jnieve@gmail.com>
 about: Ethereum VM Client
 args:
     - listen-port:
@@ -48,7 +48,7 @@ subcommands:
     - transaction-test:
         about: Tests processing the bytecode of a transaction
         version: "0.1"
-        author: Fletcher Haynes <fletcher@capitalprawn.com>
+        author: Agustin Chiappe Berrini <jnieve@gmail.com>
         args:
           - INPUT:
               help: Sets the input file to use
@@ -59,7 +59,7 @@ subcommands:
             - new:
                 about: Creates a new Account
                 version: "0.1"
-                author: "Fletcher Haynes <fletcher@capitalprawn.com>"
+                author: "Agustin Chiappe Berrini <jnieve@gmail.com>"
                 args:
                     - keyfile-path:
                         short: k

@@ -1,15 +1,14 @@
 [package]
 name = "fvm"
 version = "0.1.0"
-authors = ["Fletcher Haynes <fletcher@subnetzero.io>"]
+authors = ["Agustin Chiappe Berrini <jnieve@gmail.com>"]
 
 [dependencies]
 etcommon-bigint = "0.2.10"
-etcommon-trie = "0.4"
+etcommon-trie = "0.4.0"
 etcommon-block = "0.5.1"
-etcommon-rlp = "0.2"
-env_logger = "0.6.0"
+etcommon-rlp = "0.2.4"
+env_logger = "0.7.0"
+log = "0.4.8"
+tiny-keccak = "1.5.0"
 failure = "0.1.5"
-libvm = { git = "https://github.com/Fantom-foundation/libvm" }
-log = "0.4.6"
-keccak-hash = "0.1.2"
