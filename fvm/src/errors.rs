@@ -1,48 +1,30 @@
 //! This module contains errors related to the Fantom VM itself
-use std::error::Error;
+use failure::Error;
 use std::fmt;
 
 /// Convenience wrapper around T and a VMError
-pub type Result<T> = std::result::Result<T, VMError>;
+pub type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Fail)]
 /// Errors related to the VM
 pub enum VMError {
     // VM has encountered an unknown opcode
+    #[fail(display = "an unrecognized opcode was found")]
     UnknownOpcodeError,
     // VM has run out of memory
+    #[fail(display = "out of memory")]
     MemoryError,
 }
 
-impl Error for VMError {}
-
-impl fmt::Display for VMError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            VMError::UnknownOpcodeError => write!(f, "an unrecognized opcode was found"),
-            VMError::MemoryError => write!(f, "out of memory"),
-            _ => write!(f, "unknown error occurred"),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Fail)]
 /// Errors related to Storage
 pub enum StorageError {
+    #[fail(display = "commit area")]
     CommitError,
+    #[fail(display = "require area")]
     RequireError,
+    #[fail(display = "invalid commitment")]
     InvalidCommitment,
+    #[fail(display = "already committed")]
     AlreadyCommitted,
-}
-
-impl Error for StorageError {}
-
-impl fmt::Display for StorageError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            StorageError::RequireError => write!(f, "require area"),
-            StorageError::CommitError => write!(f, "commit area"),
-            _ => write!(f, "unknown storage error occurred"),
-        }
-    }
 }

@@ -5,7 +5,7 @@ use std::fs;
 use std::path::Path;
 
 // Database imports
-use rkv::{Manager, Rkv, Store, StoreError, Value};
+use rkv::{Manager, Readable, Rkv, SingleStore, StoreError, Value};
 use tempdir::TempDir;
 use trie::TrieMut;
 
@@ -14,7 +14,7 @@ use bigint::H256;
 pub type RDB = std::sync::Arc<std::sync::RwLock<rkv::Rkv>>;
 
 /// Creates a temporary DB. Mostly useful for testing.
-pub fn create_temporary_db() -> Result<(RDB, Store), StoreError> {
+pub fn create_temporary_db() -> Result<(RDB, SingleStore), StoreError> {
     let tempdir = TempDir::new("testing").unwrap();
     let root = tempdir.path();
     let created_arc = Manager::singleton().write().unwrap().get_or_create(root, Rkv::new)?;
@@ -27,7 +27,7 @@ pub fn create_temporary_db() -> Result<(RDB, Store), StoreError> {
 }
 
 /// Creates a persistent DB.
-pub fn create_persistent_db(path: &str, name: &str) -> Result<(RDB, Store), StoreError> {
+pub fn create_persistent_db(path: &str, name: &str) -> Result<(RDB, SingleStore), StoreError> {
     let root = path.to_string() + name + "/";
     fs::create_dir_all(root.clone())?;
     let root = Path::new(&root);
@@ -44,7 +44,7 @@ pub fn create_persistent_db(path: &str, name: &str) -> Result<(RDB, Store), Stor
 pub struct DB {
     root: H256,
     handle: RDB,
-    database: Store,
+    database: SingleStore,
 }
 
 impl DB {

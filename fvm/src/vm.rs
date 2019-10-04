@@ -291,7 +291,7 @@ impl VM {
                     let mut k: [u8; 32] = [0; 32];
                     sha3.finalize(&mut k);
                     println!("k is: {:?}", k);
-                    self.registers[self.stack_pointer - 1] = M256::from(k);
+                    self.registers[self.stack_pointer - 1] = M256::from(k.as_ref());
                     self.pc += 1;
                 }
             }
@@ -352,7 +352,7 @@ impl VM {
                 if let Some(ref mut store) = self.storage {
                     self.registers[self.stack_pointer] = store.read(s1.into()).unwrap();
                 } else {
-                    return Err(VMError::MemoryError);
+                    Err(VMError::MemoryError)?;
                 }
             }
             Opcode::SSTORE => {
@@ -363,11 +363,11 @@ impl VM {
                     match store.write(s1.into(), s2.into()) {
                         Ok(_) => {}
                         Err(_e) => {
-                            return Err(VMError::MemoryError);
+                            Err(VMError::MemoryError)?;
                         }
                     }
                 } else {
-                    return Err(VMError::MemoryError);
+                    Err(VMError::MemoryError)?;
                 }
             }
             Opcode::MLOAD => {
@@ -376,7 +376,7 @@ impl VM {
                 if let Some(ref mut mem) = self.memory {
                     self.registers[self.stack_pointer] = mem.read(offset);
                 } else {
-                    return Err(VMError::MemoryError);
+                    Err(VMError::MemoryError)?;
                 }
             }
             Opcode::MSTORE => {
@@ -387,7 +387,7 @@ impl VM {
                     mem.write(offset, value)?;
                     self.pc += 1;
                 } else {
-                    return Err(VMError::MemoryError);
+                    Err(VMError::MemoryError)?;
                 }
             }
             Opcode::MSTORE8 => {
@@ -404,7 +404,7 @@ impl VM {
                     self.registers[self.stack_pointer] = mem.size();
                     self.pc += 1;
                 } else {
-                    return Err(VMError::MemoryError);
+                    Err(VMError::MemoryError)?;
                 }
             }
             Opcode::PUSH(bytes) => {
@@ -441,11 +441,11 @@ impl VM {
                         topics: topics,
                     });
                 } else {
-                    return Err(VMError::MemoryError);
+                    Err(VMError::MemoryError)?;
                 }
             }
             _ => {
-                return Err(VMError::UnknownOpcodeError);
+                Err(VMError::UnknownOpcodeError)?;
             }
         };
 

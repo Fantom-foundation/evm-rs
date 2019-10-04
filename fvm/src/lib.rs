@@ -1,7 +1,7 @@
 extern crate bigint;
 extern crate env_logger;
-extern crate failure;
-// extern crate libvm;
+#[macro_use] extern crate failure;
+extern crate libvm;
 extern crate log;
 extern crate rlp;
 extern crate tiny_keccak;
