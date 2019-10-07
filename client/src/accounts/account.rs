@@ -4,7 +4,6 @@ use std::{fmt, error::Error};
 use std::fs::File;
 use std::path::PathBuf;
 use rand::Rng;
-use rand::OsRng;
 use std::collections::HashMap;
 use secp256k1;
 use secp256k1::key::{PublicKey, SecretKey};
@@ -16,6 +15,7 @@ use hmac::Hmac;
 use sha2::Sha256;
 use sha3::{Digest, Keccak256};
 use std::string::ToString;
+use rand::rngs::OsRng;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 /// Basic Account structure for Fantom system

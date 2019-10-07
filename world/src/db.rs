@@ -5,7 +5,7 @@ use std::fs;
 use std::path::Path;
 
 // Database imports
-use rkv::{Manager, Readable, Rkv, SingleStore, StoreError, Value};
+use rkv::{Manager, Readable, Rkv, StoreError, Value, StoreOptions, SingleStore};
 use tempdir::TempDir;
 use trie::TrieMut;
 
@@ -19,7 +19,7 @@ pub fn create_temporary_db() -> Result<(RDB, SingleStore), StoreError> {
     let root = tempdir.path();
     let created_arc = Manager::singleton().write().unwrap().get_or_create(root, Rkv::new)?;
     if let Ok(k) = created_arc.read() {
-        if let Ok(a) = k.open_or_create("store") {
+        if let Ok(a) = k.open_single("store", StoreOptions::create()) {
             return Ok((created_arc.clone(), a));
         }
     }
@@ -33,7 +33,7 @@ pub fn create_persistent_db(path: &str, name: &str) -> Result<(RDB, SingleStore)
     let root = Path::new(&root);
     let created_arc = Manager::singleton().write().unwrap().get_or_create(root, Rkv::new)?;
     if let Ok(k) = created_arc.read() {
-        if let Ok(a) = k.open_or_create("store") {
+        if let Ok(a) = k.open_single("store", StoreOptions::create()) {
             return Ok((created_arc.clone(), a));
         }
     }
@@ -79,7 +79,7 @@ impl TrieMut for DB {
         match self.handle.read() {
             Ok(env_lock) => match env_lock.write() {
                 Ok(mut writer) => {
-                    let _result = writer.put(self.database, key, &Value::Blob(value));
+                    let _result = self.database.put(&mut writer, key, &Value::Blob(value));
                     let _result = writer.commit();
                 }
                 Err(_e) => {}
@@ -92,7 +92,7 @@ impl TrieMut for DB {
         match self.handle.write() {
             Ok(env_lock) => match env_lock.write() {
                 Ok(mut writer) => {
-                    let _result = writer.delete(self.database, key);
+                    let _result = self.database.delete(&mut writer, key);
                     let _result = writer.commit();
                 }
                 Err(_e) => {}
@@ -103,7 +103,7 @@ impl TrieMut for DB {
     fn get(&self, key: &[u8]) -> Option<Vec<u8>> {
         match self.handle.read() {
             Ok(env_lock) => match env_lock.read() {
-                Ok(reader) => match reader.get(self.database, key) {
+                Ok(reader) => match self.database.get(&reader, key) {
                     Ok(result) => match result {
                         Some(r) => {
                             let final_result: Vec<u8> = r.to_bytes().unwrap();

@@ -1,4 +1,3 @@
-use rand::os::OsRng;
 use rpassword::read_password;
 use std::{io, io::Write, io::BufRead, io::BufReader};
 use secp256k1;
@@ -6,6 +5,7 @@ use secp256k1::key::{PublicKey, SecretKey};
 use secp256k1::Error;
 use std::{fmt, fs::File};
 use std::string::ToString;
+use rand::rngs::OsRng;
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Wrapper type around a String to represent a password
