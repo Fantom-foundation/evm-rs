@@ -5,6 +5,7 @@ use secp256k1::key::{PublicKey, SecretKey};
 use secp256k1::Error;
 use std::{fmt, fs::File};
 use std::string::ToString;
+use rand::{Rng, RngCore};
 use rand::rngs::OsRng;
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -55,11 +56,12 @@ impl Password {
 pub fn generate_random_keypair() -> Result<(PublicKey, SecretKey), Error> {
     let context_flag = secp256k1::ContextFlag::Full;
     let context = secp256k1::Secp256k1::with_caps(context_flag);
-    let mut rng = OsRng::new().expect("OsRng");
-    match context.generate_keypair(&mut rng) {
-        Ok((secret_key, public_key)) => Ok((public_key, secret_key)),
-        Err(e) => Err(e),
-    }
+    let mut rng = OsRng::default();
+    let mut private_key_raw = [0u8; 32];
+    rng.fill_bytes(&mut private_key_raw);
+    let private_key = SecretKey::from(private_key_raw);
+    let public_key = PublicKey::from_secret_key(&context, &private_key)?;
+    Ok((public_key, private_key))
 }
 
 /// Prompts the user for a passphrase. They will have to enter this to do anything with

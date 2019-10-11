@@ -4,6 +4,7 @@ use std::{fmt, error::Error};
 use std::fs::File;
 use std::path::PathBuf;
 use rand::Rng;
+use rand::distributions::Standard;
 use std::collections::HashMap;
 use secp256k1;
 use secp256k1::key::{PublicKey, SecretKey};
@@ -103,7 +104,7 @@ impl Account {
 
     /// Generates the ciphertext version of the secret key
     pub fn generate_cipher_text(secret_key: &secp256k1::key::SecretKey) -> (String, Vec<u8>) {
-        let mut generator = OsRng::new().unwrap();
+        let mut generator = OsRng::default();
         // This section generates the ciphertext version of the secret key
         let cipher = symm::Cipher::aes_128_ctr();
         let mut key: Vec<u8> = vec![];
@@ -148,7 +149,7 @@ impl Account {
 
     /// Generates an ID, the ciphertext, and iv. 
     pub fn generate_ancillary_data(&mut self, public_key: PublicKey, secret_key: SecretKey) -> Result<Box<Account>, Box<Error>> {
-        let mut generator = OsRng::new().expect("Unable to generate OsRng");
+        let mut generator = OsRng::default();
         self.id = uuid::Uuid::new_v4().to_hyphenated().to_string();
         let (ciphertext, iv) = Account::generate_cipher_text(&secret_key);
         let address = Account::get_address(public_key);
@@ -170,12 +171,7 @@ impl Account {
     pub fn account_from_passphrase(iv: &[u8], ciphertext: &str, address: &str, base_directory: &str) -> Result<Box<Account>, Box<Error>> {
         // This is the passphrase we'll use to encrypt their secret key, and they will need to
         // provide to decrypt it
-        let mut generator = match OsRng::new() {
-            Ok(g) => { g },
-            Err(e) => {
-                return Err(Box::new(e));
-            }
-        };
+        let mut generator = OsRng::default();
 
         let passphrase = match keys::get_passphrase() {
             Ok(passphrase) => { passphrase },
@@ -185,7 +181,7 @@ impl Account {
         };
 
         let count: u32 = 64000 + rand::thread_rng().gen_range(0, 20000);
-        let salt: Vec<u8> = generator.gen_iter::<u8>().take(16).collect();
+        let salt: Vec<u8> = generator.sample_iter(Standard).take(16).collect();
 
         // Pre-allocate an array to hold the derived key
         let mut dk = [0u8; 32];

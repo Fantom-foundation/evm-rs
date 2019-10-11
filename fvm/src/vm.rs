@@ -78,6 +78,10 @@ impl VM {
     /// Executes the next instruction only
     pub fn execute_one(&mut self) -> Result<()> {
         let opcode = Opcode::from(&self.code[self.pc]);
+        self.execute_one_instruction(opcode)
+    }
+
+    fn execute_one_instruction(&mut self, opcode: Opcode) -> Result<()> {
         match opcode {
             Opcode::STOP => {
                 return Ok(());
@@ -448,7 +452,6 @@ impl VM {
                 Err(VMError::UnknownOpcodeError)?;
             }
         };
-
         Ok(())
     }
 
