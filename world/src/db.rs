@@ -5,7 +5,7 @@ use std::fs;
 use std::path::Path;
 
 // Database imports
-use rkv::{Manager, Readable, Rkv, StoreError, Value, StoreOptions, SingleStore};
+use rkv::{Manager, Rkv, SingleStore, StoreError, StoreOptions, Value};
 use tempdir::TempDir;
 use trie::TrieMut;
 

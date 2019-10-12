@@ -1,6 +1,7 @@
 extern crate bigint;
 extern crate env_logger;
-#[macro_use] extern crate failure;
+#[macro_use]
+extern crate failure;
 extern crate libvm;
 extern crate log;
 extern crate rlp;

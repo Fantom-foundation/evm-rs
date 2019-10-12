@@ -1,13 +1,12 @@
 #![allow(dead_code)]
 #![allow(clippy::many_single_char_names)]
 
-use ethereum_types::{H256, H512, H64, U256};
 use byteorder::{LittleEndian, ReadBytesExt, WriteBytesExt};
+use ethereum_types::{H256, H512, H64, U256};
 use sha3::{Digest, Keccak256, Keccak512};
 use std::ops::BitXor;
 
 use super::miller_rabin::is_prime;
-use futures_util::stream::StreamExt;
 
 const DATASET_BYTES_INIT: usize = 1_073_741_824; // 2 to the power of 30.
 const DATASET_BYTES_GROWTH: usize = 8_388_608; // 2 to the power of 23.
@@ -279,18 +278,13 @@ pub fn mine(
         for (i, b) in data.iter().enumerate() {
             h256_parts[i] = *b;
         }
-        let (_, result) = hashimoto(
-            H256::from(&h256_parts),
-            nonce_current,
-            full_size,
-            |i| {
-                let mut r = [0u8; 64];
-                for j in 0..64 {
-                    r[j] = dataset[i * 64 + j];
-                }
-                H512::from(r)
-            },
-        );
+        let (_, result) = hashimoto(H256::from(&h256_parts), nonce_current, full_size, |i| {
+            let mut r = [0u8; 64];
+            for j in 0..64 {
+                r[j] = dataset[i * 64 + j];
+            }
+            H512::from(r)
+        });
         let tmp: [u8; 32] = result.into();
         let result_cmp: U256 = U256::from(&tmp);
         if result_cmp <= target {

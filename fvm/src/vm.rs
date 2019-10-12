@@ -31,7 +31,7 @@ impl VM {
             memory: None,
             storage: None,
             stack_pointer: 0,
-            code: code,
+            code,
             pc: 0,
             logs: vec![],
         }
@@ -116,7 +116,7 @@ impl VM {
                 let s2 = MI256::from(self.registers[self.stack_pointer - 1]);
                 let result = s1 / s2;
                 let result: M256 = result.into();
-                self.registers[self.stack_pointer - 1] = result.into();
+                self.registers[self.stack_pointer - 1] = result;
                 self.pc += 1;
             }
             Opcode::SMOD => {
@@ -356,7 +356,7 @@ impl VM {
                 if let Some(ref mut store) = self.storage {
                     self.registers[self.stack_pointer] = store.read(s1.into()).unwrap();
                 } else {
-                    Err(VMError::MemoryError)?;
+                    return Err(VMError::MemoryError.into());
                 }
             }
             Opcode::SSTORE => {
@@ -364,14 +364,12 @@ impl VM {
                 let s1 = self.registers[self.stack_pointer];
                 let s2 = self.registers[self.stack_pointer - 1];
                 if let Some(ref mut store) = self.storage {
-                    match store.write(s1.into(), s2.into()) {
+                    match store.write(s1.into(), s2) {
                         Ok(_) => {}
-                        Err(_e) => {
-                            Err(VMError::MemoryError)?;
-                        }
+                        Err(_e) => return Err(VMError::MemoryError.into()),
                     }
                 } else {
-                    Err(VMError::MemoryError)?;
+                    return Err(VMError::MemoryError.into());
                 }
             }
             Opcode::MLOAD => {
@@ -380,7 +378,7 @@ impl VM {
                 if let Some(ref mut mem) = self.memory {
                     self.registers[self.stack_pointer] = mem.read(offset);
                 } else {
-                    Err(VMError::MemoryError)?;
+                    return Err(VMError::MemoryError.into());
                 }
             }
             Opcode::MSTORE => {
@@ -391,7 +389,7 @@ impl VM {
                     mem.write(offset, value)?;
                     self.pc += 1;
                 } else {
-                    Err(VMError::MemoryError)?;
+                    return Err(VMError::MemoryError.into());
                 }
             }
             Opcode::MSTORE8 => {
@@ -408,7 +406,7 @@ impl VM {
                     self.registers[self.stack_pointer] = mem.size();
                     self.pc += 1;
                 } else {
-                    Err(VMError::MemoryError)?;
+                    return Err(VMError::MemoryError.into());
                 }
             }
             Opcode::PUSH(bytes) => {
@@ -441,16 +439,14 @@ impl VM {
                     println!("Pushing logs");
                     self.logs.push(Log {
                         address: self.address.unwrap(),
-                        data: data,
-                        topics: topics,
+                        data,
+                        topics,
                     });
                 } else {
-                    Err(VMError::MemoryError)?;
+                    return Err(VMError::MemoryError.into());
                 }
             }
-            _ => {
-                Err(VMError::UnknownOpcodeError)?;
-            }
+            _ => return Err(VMError::UnknownOpcodeError.into()),
         };
         Ok(())
     }

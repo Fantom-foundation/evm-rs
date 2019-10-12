@@ -12,4 +12,4 @@ env_logger = "0.7.0"
 libvm = { git = "https://github.com/Fantom-foundation/libvm" }
 log = "0.4.8"
 tiny-keccak = "1.5.0"
-failure = "0.1.5"
+failure = "0.1.6"

@@ -1,12 +1,12 @@
+use rand::rngs::OsRng;
+use rand::RngCore;
 use rpassword::read_password;
-use std::{io, io::Write, io::BufRead, io::BufReader};
 use secp256k1;
 use secp256k1::key::{PublicKey, SecretKey};
 use secp256k1::Error;
-use std::{fmt, fs::File};
 use std::string::ToString;
-use rand::{Rng, RngCore};
-use rand::rngs::OsRng;
+use std::{fmt, fs::File};
+use std::{io, io::BufRead, io::BufReader, io::Write};
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 /// Wrapper type around a String to represent a password
@@ -110,11 +110,11 @@ pub fn passwords_from_files(files: &[String]) -> Result<Vec<Password>, String> {
             Ok(lines)
         })
         .collect::<Result<Vec<Vec<Password>>, String>>();
-    Ok(passwords?.into_iter().flat_map(|x| x).collect())
+    Ok(passwords?.into_iter().flatten().collect())
 }
 
 mod tests {
-    use super::*;
+    use keys::generate_random_keypair;
 
     #[test]
     fn test_generate_random_keypair() {

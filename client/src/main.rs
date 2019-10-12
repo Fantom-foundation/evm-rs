@@ -31,10 +31,10 @@ extern crate sha3;
 extern crate uuid;
 extern crate world;
 
-use std::{fs, fs::File, io};
 use std::io::prelude::*;
 use std::path::PathBuf;
 use std::process::exit;
+use std::{fs, fs::File, io};
 use std::{str, thread};
 
 use clap::App;
@@ -47,7 +47,7 @@ pub mod servers;
 
 type HmacSha256 = Hmac<Sha256>;
 
-const DIRECTORIES: [&'static str; 6] = ["data", "raft", "eth", "lachesis", "keys", "chaindata"];
+const DIRECTORIES: [&str; 6] = ["data", "raft", "eth", "lachesis", "keys", "chaindata"];
 pub fn main() {
     env_logger::init();
 
@@ -103,7 +103,7 @@ fn create_directories(path: &str) -> Result<(), io::Error> {
         match create_directory(path, dir_name) {
             Ok(_) => {
                 debug!("Directory {:?} created", dir_name);
-            },
+            }
             Err(e) => {
                 error!("Error creating directory {:?}. Error was: {:?}", dir_name, e);
             }

@@ -1,6 +1,6 @@
 //! Contains the Transaction module
 
-use ethereum_types::{U256, H160};
+use ethereum_types::{H160, U256};
 pub mod pool;
 
 /// Core data structure for interacting with the EVM

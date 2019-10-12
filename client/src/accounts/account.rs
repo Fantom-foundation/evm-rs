@@ -1,22 +1,22 @@
 //! Contains functionality related to dealing with Accounts
 
-use std::{fmt, error::Error};
-use std::fs::File;
-use std::path::PathBuf;
-use rand::Rng;
+use hmac::Hmac;
+use keys;
+use openssl::symm;
 use rand::distributions::Standard;
-use std::collections::HashMap;
+use rand::rngs::OsRng;
+use rand::Rng;
+use rustc_serialize::hex::ToHex;
 use secp256k1;
 use secp256k1::key::{PublicKey, SecretKey};
-use openssl::symm;
-use keys;
-use uuid;
-use rustc_serialize::hex::ToHex;
-use hmac::Hmac;
 use sha2::Sha256;
 use sha3::{Digest, Keccak256};
+use std::collections::HashMap;
+use std::fs::File;
+use std::path::PathBuf;
 use std::string::ToString;
-use rand::rngs::OsRng;
+use std::{error::Error, fmt};
+use uuid;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
 /// Basic Account structure for Fantom system
@@ -30,13 +30,12 @@ pub struct Account {
     /// Struct that contains various crypto options for this account
     crypto: AccountCrypto,
     /// Contains the base data directory
-    base_directory: PathBuf
-
+    base_directory: PathBuf,
 }
 
 impl Account {
     /// Creates and returns a new Account
-    pub fn new(id: String, version: usize, base_directory: PathBuf) -> Result<Account, Box<Error>> {
+    pub fn new(id: String, version: usize, base_directory: PathBuf) -> Result<Account, Box<dyn Error>> {
         let secp = secp256k1::Secp256k1::with_caps(secp256k1::ContextFlag::Full);
         let mut hasher = Keccak256::new();
         let (p, s) = keys::generate_random_keypair()?;
@@ -48,11 +47,11 @@ impl Account {
         let address = public_result[start..end].to_string();
 
         Ok(Account {
-            address: address,
+            address,
             crypto: AccountCrypto::new(p, s),
             id,
             version,
-            base_directory
+            base_directory,
         })
     }
 
@@ -121,17 +120,14 @@ impl Account {
     }
 
     /// Saves an account to a file in JSON format
-    pub fn save(&self, base_dir: &str, filename: &str) -> Result<(), Box<Error>> {
+    pub fn save(&self, base_dir: &str, filename: &str) -> Result<(), Box<dyn Error>> {
         let path = std::path::PathBuf::from(base_dir.to_string() + filename);
         match File::create(path) {
-            Ok(_) => {
-                Ok(())
-            },
-            Err(e) => {
-                return Err(
-                    Box::new(
-                        AccountError::new(&format!("There was an error saving: {:?}", e))));
-            }
+            Ok(_) => Ok(()),
+            Err(e) => Err(Box::new(AccountError::new(&format!(
+                "There was an error saving: {:?}",
+                e
+            )))),
         }
     }
 
@@ -147,13 +143,16 @@ impl Account {
         std::path::PathBuf::from(base_dir.to_string() + filename)
     }
 
-    /// Generates an ID, the ciphertext, and iv. 
-    pub fn generate_ancillary_data(&mut self, public_key: PublicKey, secret_key: SecretKey) -> Result<Box<Account>, Box<Error>> {
-        let mut generator = OsRng::default();
+    /// Generates an ID, the ciphertext, and iv.
+    pub fn generate_ancillary_data(
+        &mut self,
+        public_key: PublicKey,
+        secret_key: SecretKey,
+    ) -> Result<Box<Account>, Box<dyn Error>> {
         self.id = uuid::Uuid::new_v4().to_hyphenated().to_string();
         let (ciphertext, iv) = Account::generate_cipher_text(&secret_key);
         let address = Account::get_address(public_key);
-        Account::account_from_passphrase(&mut self.id.as_bytes(), &iv.to_hex(), &ciphertext, &address)
+        Account::account_from_passphrase(&self.id.as_bytes(), &iv.to_hex(), &ciphertext, &address)
     }
 
     pub fn get_account_filename(&self) -> String {
@@ -167,16 +166,20 @@ impl Account {
             + ".json"
     }
 
-
-    pub fn account_from_passphrase(iv: &[u8], ciphertext: &str, address: &str, base_directory: &str) -> Result<Box<Account>, Box<Error>> {
+    pub fn account_from_passphrase(
+        iv: &[u8],
+        ciphertext: &str,
+        address: &str,
+        base_directory: &str,
+    ) -> Result<Box<Account>, Box<dyn Error>> {
         // This is the passphrase we'll use to encrypt their secret key, and they will need to
         // provide to decrypt it
-        let mut generator = OsRng::default();
+        let generator = OsRng::default();
 
         let passphrase = match keys::get_passphrase() {
-            Ok(passphrase) => { passphrase },
-            Err(e) => { 
-                return Err(e.into()); 
+            Ok(passphrase) => passphrase,
+            Err(e) => {
+                return Err(e.into());
             }
         };
 
@@ -200,18 +203,20 @@ impl Account {
         let bd: PathBuf = base_directory.into();
         let new_account = Account::new(id, 3, bd)?;
 
-        Ok(Box::new(new_account
-            .with_cipher("aes-128-ctr".to_string())
-            .with_ciphertext(ciphertext.to_string())
-            .with_cipher_params(iv.to_hex())
-            .with_kdf("pbkdf2".to_string())
-            .with_pdkdf2_params(
-                dk.len(),
-                salt.to_hex().to_string(),
-                "hmac-sha256".to_string(),
-                count as usize,
-            )
-            .with_mac(mac.to_string())))
+        Ok(Box::new(
+            new_account
+                .with_cipher("aes-128-ctr".to_string())
+                .with_ciphertext(ciphertext.to_string())
+                .with_cipher_params(iv.to_hex())
+                .with_kdf("pbkdf2".to_string())
+                .with_pdkdf2_params(
+                    dk.len(),
+                    salt.to_hex().to_string(),
+                    "hmac-sha256".to_string(),
+                    count as usize,
+                )
+                .with_mac(mac.to_string()),
+        ))
     }
 }
 
@@ -233,7 +238,7 @@ pub struct AccountCrypto {
     // Public key
     public_key: Vec<u8>,
     // Secret key
-    secret_key: Vec<u8>
+    secret_key: Vec<u8>,
 }
 
 impl AccountCrypto {
@@ -254,7 +259,7 @@ impl AccountCrypto {
             kdfparams: AccountKDFParams::new(),
             mac: None,
             public_key: public_bytes,
-            secret_key: secret_bytes
+            secret_key: secret_bytes,
         }
     }
 }
@@ -281,7 +286,7 @@ impl AccountKDFParams {
             n: None,
             p: None,
             r: None,
-            salt: None
+            salt: None,
         }
     }
 }
@@ -289,18 +294,20 @@ impl AccountKDFParams {
 #[derive(Debug)]
 /// Struct for Account-specific errors
 pub struct AccountError {
-    details: String
+    details: String,
 }
 
 impl AccountError {
     fn new(msg: &str) -> AccountError {
-        AccountError{details: msg.to_string()}
+        AccountError {
+            details: msg.to_string(),
+        }
     }
 }
 
 impl fmt::Display for AccountError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f,"{}", self.details)
+        write!(f, "{}", self.details)
     }
 }
 
@@ -310,16 +317,17 @@ impl Error for AccountError {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rustc_serialize::hex::*;
     use fs;
+    use rustc_serialize::hex::*;
 
     fn get_test_secret_public() -> (secp256k1::key::SecretKey, secp256k1::key::PublicKey) {
         let secp = secp256k1::Secp256k1::with_caps(secp256k1::ContextFlag::Full);
-        let secret = "bb556511a3f9a71939b6e5ef0834ac606a6b87966a90fb5becd47b3603e2c4cc".from_hex().unwrap();
+        let secret = "bb556511a3f9a71939b6e5ef0834ac606a6b87966a90fb5becd47b3603e2c4cc"
+            .from_hex()
+            .unwrap();
         let secret = secp256k1::key::SecretKey::from_slice(&secp, &secret).unwrap();
         let public = secp256k1::key::PublicKey::from_secret_key(&secp, &secret).unwrap();
         (secret, public)

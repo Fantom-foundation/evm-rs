@@ -1,6 +1,5 @@
 //! This module contains errors related to the Fantom VM itself
 use failure::Error;
-use std::fmt;
 
 /// Convenience wrapper around T and a VMError
 pub type Result<T> = std::result::Result<T, Error>;

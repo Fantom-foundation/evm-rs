@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 
-use ethereum_types::{H256, H64, U256};
 use consensus::ethash;
+use ethereum_types::{H256, H64, U256};
 use std::marker::PhantomData;
 pub trait Patch {
     fn epoch_length() -> U256;
