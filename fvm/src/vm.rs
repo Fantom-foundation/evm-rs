@@ -5,7 +5,7 @@ use tiny_keccak::Keccak;
 
 use errors::{Result, VMError};
 use eth_log::Log;
-// use libvm::Cpu;
+use libvm::Cpu;
 use memory::{Memory, SimpleMemory};
 use opcodes::Opcode;
 use storage::Storage;
@@ -476,6 +476,36 @@ impl Default for VM {
             logs: vec![],
             address: None,
         }
+    }
+}
+
+impl Cpu<Opcode> for VM {
+    fn execute_instruction(&mut self, instruction: Opcode) -> Result<()> {
+        self.execute_one_instruction(instruction)
+    }
+
+    fn get_pc(&self) -> usize {
+        self.pc
+    }
+
+    fn get_next_instruction(&mut self) -> Option<Opcode> {
+        if self.is_done() {
+            Some(Opcode::from(&self.code[self.pc]))
+        } else {
+            None
+        }
+    }
+
+    fn can_run(&self) -> bool {
+        true
+    }
+
+    fn is_done(&self) -> bool {
+        self.pc < self.code.len()
+    }
+
+    fn increase_pc(&mut self, steps: usize) {
+        self.pc += steps;
     }
 }
 
