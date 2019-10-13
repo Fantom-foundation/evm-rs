@@ -1,6 +1,6 @@
 [package]
 name = "fvm"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Agustin Chiappe Berrini <jnieve@gmail.com>"]
 
 [dependencies]

@@ -7,7 +7,7 @@ use errors::{Result, VMError};
 use eth_log::Log;
 use libvm::Cpu;
 use memory::{Memory, SimpleMemory};
-use opcodes::Opcode;
+pub use opcodes::Opcode;
 use storage::Storage;
 
 /// Core VM struct that executes bytecode
