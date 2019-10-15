@@ -9,6 +9,7 @@ use libvm::Cpu;
 use memory::{Memory, SimpleMemory};
 pub use opcodes::Opcode;
 use storage::Storage;
+use std::array::FixedSizeArray;
 
 /// Core VM struct that executes bytecode
 pub struct VM {
@@ -311,7 +312,22 @@ impl VM {
             Opcode::CALLDATALOAD => unimplemented!(),
             Opcode::CALLDATASIZE => unimplemented!(),
             Opcode::CALLDATACOPY => unimplemented!(),
-            Opcode::CODESIZE => unimplemented!(),
+            Opcode::CODESIZE => {
+                self.registers[self.stack_pointer] = self.code.len().into();
+            },
+            Opcode::CODECOPY => {
+                let memory_offset: U256 = self.registers[self.stack_pointer].into();
+                let code_offset = self.registers[self.stack_pointer - 1];
+                let size = self.registers[self.stack_pointer - 2];
+
+                for (i, b) in self.code.iter().skip(code_offset.as_usize()).take(size.as_usize()).cloned().enumerate() {
+                    if let Some(ref mut s) = &mut self.storage {
+                        s.write(memory_offset + i.into(), ([b].as_slice()).into())?;
+                    } else {
+                        return Err(VMError::MemoryError.into());
+                    }
+                }
+            }
             Opcode::GASPRICE => unimplemented!(),
             Opcode::EXTCODESIZE => unimplemented!(),
             Opcode::EXTCODECOPY => unimplemented!(),
@@ -446,7 +462,6 @@ impl VM {
                     return Err(VMError::MemoryError.into());
                 }
             }
-            _ => return Err(VMError::UnknownOpcodeError.into()),
         };
         Ok(())
     }

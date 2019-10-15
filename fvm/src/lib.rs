@@ -1,3 +1,4 @@
+#![feature(fixed_size_array)]
 extern crate bigint;
 extern crate env_logger;
 #[macro_use]
