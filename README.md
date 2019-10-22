@@ -1,4 +1,6 @@
-# Fantom VM
+Fantom VM
+---------
+![Rust: nightly](https://img.shields.io/badge/Rust-nightly-blue.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-green.svg) [![Build Status](https://travis-ci.org/Fantom-foundation/evm-rs.svg?branch=master)](https://travis-ci.org/Fantom-foundation/evm-rs)
 
 This is a register-based virtual machine intended to execute transactions for the Fantom cryptocurrency. In its current state, it can function as an Ethereum VM and full node.
 
