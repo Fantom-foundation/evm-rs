@@ -10,9 +10,14 @@ use memory::{Memory, SimpleMemory};
 pub use opcodes::Opcode;
 use std::array::FixedSizeArray;
 use storage::Storage;
+use std::collections::HashMap;
+use ethereum_types::H160;
+use account::Account;
+use transaction::Transaction;
 
 /// Core VM struct that executes bytecode
 pub struct VM {
+    accounts: HashMap<H160, Account>,
     address: Option<Address>,
     registers: [M256; 1024],
     memory: Option<Box<dyn Memory>>,
@@ -27,6 +32,7 @@ impl VM {
     /// Creates and returns a new VM
     pub fn new(code: Vec<u8>) -> VM {
         VM {
+            accounts: HashMap::new(),
             address: None,
             registers: [0.into(); 1024],
             memory: None,
@@ -496,6 +502,7 @@ impl Default for VM {
             code: vec![],
             pc: 0,
             logs: vec![],
+            accounts: HashMap::default(),
             address: None,
         }
     }
@@ -531,7 +538,9 @@ impl Cpu<Opcode> for VM {
     }
 
     fn set_instructions<J: Iterator<Item = Opcode>>(&mut self, i: J) {
-        self.code = i.map(Opcode::into).collect();
+        let bytes: Vec<u8> = i.map(Opcode::into).collect();
+        let transaction: Transaction = serde_json::from_slice(&bytes).unwrap();
+        let code = transaction.data.clone();
     }
 }
 
