@@ -14,10 +14,12 @@ use std::collections::HashMap;
 use ethereum_types::H160;
 use account::Account;
 use transaction::Transaction;
+use rlp::Encodable;
 
 /// Core VM struct that executes bytecode
 pub struct VM {
     accounts: HashMap<H160, Account>,
+    account_code: HashMap<H160, Vec<u8>>,
     address: Option<Address>,
     registers: [M256; 1024],
     memory: Option<Box<dyn Memory>>,
@@ -26,6 +28,7 @@ pub struct VM {
     pc: usize,
     stack_pointer: usize,
     logs: Vec<Log>,
+    current_transaction: Option<Transaction>,
 }
 
 impl VM {
@@ -33,7 +36,9 @@ impl VM {
     pub fn new(code: Vec<u8>) -> VM {
         VM {
             accounts: HashMap::new(),
+            account_code: HashMap::new(),
             address: None,
+            current_transaction: None,
             registers: [0.into(); 1024],
             memory: None,
             storage: None,
@@ -372,7 +377,29 @@ impl VM {
                 }
             }
             Opcode::JUMPDEST => {}
-            Opcode::CREATE => unimplemented!(),
+            Opcode::CREATE => {
+                let bytes = self.registers[self.stack_pointer].rlp_bytes().into_vec();
+                let mut id_bytes = [0u8; 20];
+                for (n, byte) in bytes.into_iter().take(20).enumerate() {
+                    id_bytes[n] = byte;
+                }
+                let id: H160 = id_bytes.into();
+                let start_offset = self.registers[self.stack_pointer-1].into();
+                let size = self.registers[self.stack_pointer-2].into();
+                if let Some(ref mut store) = self.storage {
+                    let mut code = vec![];
+                    let mut counter = start_offset;
+                    while counter < start_offset + size {
+                        code.push(store.read(counter)?.as_u32() as u8);
+                        counter = counter + 1.into();
+                    }
+                    let account = Account::new(format!("{}", id), 0, "".parse().unwrap())?;
+                    self.accounts.insert(id.clone(), account);
+                    self.account_code.insert(id, code);
+                } else {
+                    return Err(VMError::MemoryError.into());
+                }
+            },
             Opcode::CALL => unimplemented!(),
             Opcode::CALLCODE => unimplemented!(),
             Opcode::RETURN => unimplemented!(),
@@ -503,6 +530,8 @@ impl Default for VM {
             pc: 0,
             logs: vec![],
             accounts: HashMap::default(),
+            account_code: HashMap::default(),
+            current_transaction: None,
             address: None,
         }
     }
@@ -541,6 +570,8 @@ impl Cpu<Opcode> for VM {
         let bytes: Vec<u8> = i.map(Opcode::into).collect();
         let transaction: Transaction = serde_json::from_slice(&bytes).unwrap();
         let code = transaction.data.clone();
+        self.code = code;
+        self.current_transaction = Some(transaction);
     }
 }
 

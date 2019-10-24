@@ -1,5 +1,6 @@
 //! Contains functionality related to dealing with Accounts
 
+use failure::Error;
 use hmac::Hmac;
 use keys;
 use openssl::symm;
@@ -15,7 +16,7 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::path::PathBuf;
 use std::string::ToString;
-use std::{error::Error, fmt};
+use std::fmt;
 use uuid;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -35,7 +36,7 @@ pub struct Account {
 
 impl Account {
     /// Creates and returns a new Account
-    pub fn new(id: String, version: usize, base_directory: PathBuf) -> Result<Account, Box<dyn Error>> {
+    pub fn new(id: String, version: usize, base_directory: PathBuf) -> Result<Account, Error> {
         let secp = secp256k1::Secp256k1::with_caps(secp256k1::ContextFlag::Full);
         let mut hasher = Keccak256::new();
         let (p, s) = keys::generate_random_keypair()?;
@@ -120,11 +121,11 @@ impl Account {
     }
 
     /// Saves an account to a file in JSON format
-    pub fn save(&self, base_dir: &str, filename: &str) -> Result<(), Box<dyn Error>> {
+    pub fn save(&self, base_dir: &str, filename: &str) -> Result<(), Error> {
         let path = std::path::PathBuf::from(base_dir.to_string() + filename);
         match File::create(path) {
             Ok(_) => Ok(()),
-            Err(e) => Err(Box::new(AccountError::new(&format!(
+            Err(e) => Err(Error::from(AccountError::new(&format!(
                 "There was an error saving: {:?}",
                 e
             )))),
@@ -148,7 +149,7 @@ impl Account {
         &mut self,
         public_key: PublicKey,
         secret_key: SecretKey,
-    ) -> Result<Box<Account>, Box<dyn Error>> {
+    ) -> Result<Box<Account>, Error> {
         self.id = uuid::Uuid::new_v4().to_hyphenated().to_string();
         let (ciphertext, iv) = Account::generate_cipher_text(&secret_key);
         let address = Account::get_address(public_key);
@@ -171,7 +172,7 @@ impl Account {
         ciphertext: &str,
         address: &str,
         base_directory: &str,
-    ) -> Result<Box<Account>, Box<dyn Error>> {
+    ) -> Result<Box<Account>, Error> {
         // This is the passphrase we'll use to encrypt their secret key, and they will need to
         // provide to decrypt it
         let generator = OsRng::default();
@@ -179,7 +180,9 @@ impl Account {
         let passphrase = match keys::get_passphrase() {
             Ok(passphrase) => passphrase,
             Err(e) => {
-                return Err(e.into());
+                return Err(Error::from(AccountError {
+                    details: e,
+                }));
             }
         };
 
@@ -291,7 +294,7 @@ impl AccountKDFParams {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Fail)]
 /// Struct for Account-specific errors
 pub struct AccountError {
     details: String,
@@ -311,16 +314,9 @@ impl fmt::Display for AccountError {
     }
 }
 
-impl Error for AccountError {
-    fn description(&self) -> &str {
-        &self.details
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use fs;
     use rustc_serialize::hex::*;
 
     fn get_test_secret_public() -> (secp256k1::key::SecretKey, secp256k1::key::PublicKey) {
@@ -337,15 +333,6 @@ mod tests {
         "527965ec-2091-45c5-ab06-ecb2e54a56bb".to_string()
     }
 
-    fn get_test_data_directory() -> PathBuf {
-        let path = "/tmp/fantom-test/".to_string();
-        const DIRECTORIES: [&'static str; 6] = ["data", "raft", "eth", "lachesis", "keys", "chaindata"];
-        for end in &DIRECTORIES {
-            let _ = fs::create_dir_all(path.clone() + end);
-        }
-        PathBuf::from(path)
-    }
-
     #[test]
     fn create_kdf_params() {
         let test_params = AccountKDFParams::new();
@@ -357,14 +344,5 @@ mod tests {
         let (p, s) = get_test_secret_public();
         let test_crypto = AccountCrypto::new(s, p);
         assert!(test_crypto.cipher.is_none());
-    }
-
-    #[test]
-    fn create_account() {
-        let tmp_id = uuid::Uuid::new_v4().to_string();
-        let base_path = get_test_data_directory();
-        let test_account = Account::new(tmp_id.to_string(), 3, base_path).unwrap();
-        let test_account_json = serde_json::to_string(&test_account);
-        assert!(test_account_json.is_ok());
     }
 }
