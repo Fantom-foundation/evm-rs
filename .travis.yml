@@ -1,7 +1,7 @@
-language: rust
-rust:
-  - latest
+dist: bionic
+language: minimal
 sudo: false
+# Default `language: rust` has problems on nightly with rustfmt support
 
 # only cache cargo subcommand binaries and .so libs
 # the build artifacts take a lot of space and are slower to
@@ -15,28 +15,41 @@ cache:
 
 # But don't cache the cargo registry
 before_cache:
-  - rm -rf /home/travis/.cargo/registry
+  - rm -rf "$HOME"/.cargo/registry
 before_script:
   - |
+    export PATH="$HOME/.cargo/bin:$PATH"
+    TRAVIS_RUST_VERSION="${TRAVIS_RUST_VERSION:-nightly}"
+    if [ "$TRAVIS_RUST_VERSION" = 'nightly' ]; then
+       printf -v RUSTFMT_VERSION '%s%s' '-' "$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/rustfmt)"
+       printf -v CLIPPY_VERSION '%s%s' '-' "$(curl -s https://rust-lang.github.io/rustup-components-history/x86_64-unknown-linux-gnu/clippy)"
+       SMALLEST_COMPAT_RUST="$([[ "$RUSTFMT_VERSION" < "$CLIPPY_VERSION" ]] && echo "$RUSTFMT_VERSION" || echo "$CLIPPY_VERSION")"
+
+       if command -v rustup 2>/dev/null; then
+           rustup default "${TRAVIS_RUST_VERSION}${SMALLEST_COMPAT_RUST}"
+       else
+           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain "${TRAVIS_RUST_VERSION}${SMALLEST_COMPAT_RUST}"
+       fi
+    fi
     if command -v cargo >/dev/null; then
-      export PATH=$HOME/.cargo/bin:$PATH
-      mkdir $(pwd)/socket
-      export XDG_RUNTIME_DIR="$(pwd)/socket"
+      export PATH="$HOME/.cargo/bin:$PATH"
+      export XDG_RUNTIME_DIR="$PWD"'/socket'
+      mkdir "$XDG_RUNTIME_DIR"
       cargo fetch
-      rustup component add rustfmt-preview
-      if [ -n "$CLIPPY" ]; then
-        rustup component add clippy
-      fi
+      rustup component add rustfmt
+    fi
+    if [ -n "$CLIPPY" ]; then
+      rustup component add clippy --toolchain "${TRAVIS_RUST_VERSION}${SMALLEST_COMPAT_RUST}"
+    elif [ -n "$BUILD_FMT" ]; then
+      rustup component add rustfmt --toolchain "${TRAVIS_RUST_VERSION}${SMALLEST_COMPAT_RUST}"
     fi
 script:
   - |
     if [ -n "$BUILD_FMT" ]; then
       cargo fmt --all -- --check
-      rustfmt --check src/*.rs
+      # rustfmt --check # With: `src/*.rs` xor `"$(find -name '*.rs' -not -path './target/*')"`
     elif [ -n "$CLIPPY" ]; then
-      cargo clippy --all -- -D warnings \
-        -A clippy::deprecated_cfg_attr \
-        -A clippy::for_loop_over_option
+      cargo clippy --all -- -D warnings
     elif [ -n "$CARGO_TEST" ]; then
       cargo test --all --features "$FEATURES"
     fi
@@ -49,36 +62,16 @@ matrix:
       env: CLIPPY=1
     - rust: stable
       env: CARGO_TEST=1
-      notifications:
-        slack:
-          secure: 'UzMDp+QAQmykQRh3X2zPZnxICvEH9YPynCPQ6AEsmdVb9Or3VleaYM8i+E7x5jT1HFloBJyI1G0mqrFQIbYDQug5nFUsfB2CYi7L0dpUtvoWbDMGoJ/lDI/wJDt64lqhHf9hs1aeYq454Zqcmx6/oKCgnRSyXip6y/mtOlQYjwhGN0D+TARF+6IohqJMg5iEQg4sWvugVur3GbFbatNeevLOYuhezdun4S8vhzQKsFJBK5QnIuufEyeHHjA3Ii5/yyqXUnxtRnLctjPWR+EROBO/mgqBUXPTwheiYqg9Gw9lYSRuBrtP+eixSKWnknju12YzlhAIF/HegRGzLG2PUGgLuB0TBAraaLYOODpBanVfN7DMvhg72Embdy0lZzVYPN8ImwGIU7jisWPI3x6Zz3zdI1lXZaMFS2ijlbRbYZE1YoOhS0iFQuYUc4dwu+D9Ql+IqZZ+BwE5AOy3cY149WrwGX0xaqwPad80HNHy5PUKKLxE8ZLXD0AQsWxi5M7UrHvJ7XOMRPEkskm6zNBuSXrU1vRibbtOaAC+xdPWop5j0Chf99CuIyH6NeqWVwpvl8ddTJGFZeoNXBXOp6+WAxyAJa1Z77rOvmjhdgrvcFh0o3176KCpFBQM0rWt1IVy1LFFsCP9KzMjBN1vAeEaCJZF0yQjXg/58lUTnR5a28A='
-    - language: python
-      sudo: required
-      dist: xenial
-      python:
-        - '3.7'
+    - stage: notify-website
       env:
-        - COMMENT_EXTRACTION=comment-extraction-master
-        - EXTRACTED_DIR=docs/extracted-comments
-        - INPUT_DIR=fantom-common-rs/src
-        - LANGUAGE=rust
-        - ROOT_URL=https://github.com/Fantom-Foundation/fantom-common-rs
-      before_install:
-        - curl -L https://github.com/dev10/comment-extraction/archive/master.tar.gz -o
-          comment-extraction.tgz
-        - tar xf comment-extraction.tgz
-      install:
-        - pip install -r $COMMENT_EXTRACTION/requirements.txt
+        secure: '0gwIIOp2DEydbVr4C14EX5bV1vAKsNIT4NmMBeZjZFgntCTX6Yw4XiatovNwZdqAGlz3gL88IqRQNpDGoY80shlSo3xorZ1Bt+oBMmY3QJdP+thYU6PLKF12f9KbpTqEywUpIeByzTgPJCuqTOXRfXavIHET2WQmzjUY1jgxW3ASzaefN09yOmOO0cdnod0vzPo7a8uT9gS54eGlM0G4+Usdq6d3v13MRu1Cxn5lYlzrGokZ5aeykK6taB5RlZWL8K21LIsuc1Z+7bNChPGR3OhpBFhfZNG7ST5+6NZgZjOQ12SsoTCNBZGiMGiMl0QOY6H7sfPbdKvrKZNCHXecXbN1qjRa89YCa7eY8di1iSw0PUwom7v9YAVFPx7X0o5+vzKzfKGwq8+I0ohFPLQt9oIfrAk+EyorUPy7FNwWKigGDRjkVRsthk0U01hxZ9KW49HMUske+hWsMMVrMWxe9BnuIn5HJsr0DV1eikGdL0QL78MNlvhxKPFRfYhIoDMNEHUF+8Bb4pPsLhlZ8hF3cicqoLwG9TtGZ4GUtcwZTgMqHp7F61cNtwpw9AirD0kfcMHUnvHcr9Y6XXfiiCiMJkC1C4n/Td/f8lE4cgzgzYlUvF0QvC2jUL9jVqUSCRDtQLmX9EOdWJiLWOfswlPevxpcrHFHuK2PnpIFPeXnoZE='
       script:
-        - >
-          python $COMMENT_EXTRACTION/antlr.py
-          -l $LANGUAGE
-          -o $EXTRACTED_DIR
-          -ct $TRAVIS_COMMIT
-          -ru $ROOT_URL
-          -d $INPUT_DIR
-      after_success:
-        - cd docs/
-        - pip install -r requirements.txt
-        - make html
-        - "./deploy.sh"
+        - email_author="$(git log -1 --pretty=format:'%an <%ce>')"
+        - author="${email_author% *}"; git config --global user.name "$author"
+        - email="${email_author#*<}"; email="${email::-1}"; git config --global user.email "$email"
+        - git clone https://SamuelMarks:$GH_TOKEN@github.com/Fantom-foundation/fantom-dev-web
+          && cd fantom-dev-web
+        - echo "  | [$TRAVIS_REPO_SLUG](https://github.com/$TRAVIS_REPO_SLUG) | [$TRAVIS_COMMIT_MESSAGE](https://github.com/$TRAVIS_REPO_SLUG/commit/$TRAVIS_COMMIT) |" >> CHANGESLOG.md
+        - git add CHANGESLOG.md
+        - git commit -m "[CHANGESLOG.md] $TRAVIS_REPO_SLUG - $TRAVIS_COMMIT_MESSAGE" 
+        - git push -u origin master
