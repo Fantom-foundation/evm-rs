@@ -400,7 +400,33 @@ impl VM {
                     return Err(VMError::MemoryError.into());
                 }
             },
-            Opcode::CALL => unimplemented!(),
+            Opcode::CALL => {
+                let from = self.current_transaction.as_ref().unwrap().to.unwrap().clone();
+                let to_bytes = self.registers[self.stack_pointer].rlp_bytes().into_vec();
+                let mut id_bytes = [0u8; 20];
+                for (n, byte) in to_bytes.into_iter().take(20).enumerate() {
+                    id_bytes[n] = byte;
+                }
+                let to: H160 = id_bytes.into();
+                let new_code = self.account_code[&to].clone();
+                let old_code = self.code.clone();
+                let old_pc = self.pc;
+                self.code = new_code;
+                self.pc = 0;
+                self.execute()?;
+                self.code = old_code;
+                self.pc = old_pc;
+                let in_offset = self.registers[self.stack_pointer-3];
+                let in_size = self.registers[self.stack_pointer-4];
+                let out_offset = self.registers[self.stack_pointer-5];
+                let out_size = self.registers[self.stack_pointer-6];
+                if let Some(ref mut mem) = self.memory {
+                    let slice = mem.read_slice(out_offset.into(), in_size.into());
+                    self.registers[self.stack_pointer-6] = slice.into();
+                } else {
+                    return Err(VMError::MemoryError.into());
+                }
+            },
             Opcode::CALLCODE => unimplemented!(),
             Opcode::RETURN => unimplemented!(),
             Opcode::DELEGATECALL => unimplemented!(),
