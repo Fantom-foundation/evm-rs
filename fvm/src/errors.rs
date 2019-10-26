@@ -7,12 +7,12 @@ pub type Result<T> = std::result::Result<T, Error>;
 #[derive(Debug, Clone, Fail)]
 /// Errors related to the VM
 pub enum VMError {
-    // VM has encountered an unknown opcode
     #[fail(display = "an unrecognized opcode was found")]
     UnknownOpcodeError,
-    // VM has run out of memory
     #[fail(display = "out of memory")]
     MemoryError,
+    #[fail(display = "Invalid instruction")]
+    InvalidInstruction,
 }
 
 #[derive(Debug, Clone, Fail)]

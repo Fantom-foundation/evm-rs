@@ -1,6 +1,6 @@
 //! Module that contains the VM that executes bytecode
 
-use bigint::{Address, H256, M256, MI256, U256};
+use bigint::{Address, H256, M256, MI256, U256, U128};
 use tiny_keccak::Keccak;
 
 use errors::{Result, VMError};
@@ -19,6 +19,7 @@ use rlp::Encodable;
 /// Core VM struct that executes bytecode
 pub struct VM {
     accounts: HashMap<H160, Account>,
+    account_gas: HashMap<H160, U256>,
     account_code: HashMap<H160, Vec<u8>>,
     address: Option<Address>,
     registers: [M256; 1024],
@@ -37,6 +38,7 @@ impl VM {
         VM {
             accounts: HashMap::new(),
             account_code: HashMap::new(),
+            account_gas: HashMap::new(),
             address: None,
             current_transaction: None,
             registers: [0.into(); 1024],
@@ -350,20 +352,30 @@ impl VM {
             Opcode::EXTCODESIZE => unimplemented!(),
             Opcode::EXTCODECOPY => unimplemented!(),
             Opcode::RETURNDATACOPY => unimplemented!(),
-            Opcode::RETURNDATASIZE => unimplemented!(),
-            Opcode::BLOCKHASH => unimplemented!(),
-            Opcode::COINBASE => unimplemented!(),
-            Opcode::TIMESTAMP => unimplemented!(),
-            Opcode::NUMBER => unimplemented!(),
-            Opcode::DIFFICULTY => unimplemented!(),
-            Opcode::GASLIMIT => unimplemented!(),
+            Opcode::RETURNDATASIZE => {
+                let memory_offset = self.registers[self.stack_pointer];
+                let output_offset = self.registers[self.stack_pointer - 1].as_usize();
+                let size = self.registers[self.stack_pointer - 2].as_usize();
+                if let Some(ref mut mem) = &mut self.memory {
+                    for i in 0..size {
+                        let value = self.registers[output_offset - i];
+                        mem.write(memory_offset + i.into(), value)?;
+                    }
+                } else {
+                    return Err(VMError::MemoryError.into());
+                }
+            },
             Opcode::PC => {
                 self.registers[self.stack_pointer] = (self.pc - 1).into();
             }
             Opcode::POP => {
                 self.stack_pointer -= 1;
             }
-            Opcode::GAS => unimplemented!(),
+            Opcode::GAS => {
+                self.registers[self.stack_pointer] = self.account_gas.values().fold(M256::from(0), |acc, a| {
+                    acc + (*a).into()
+                });
+            },
             Opcode::JUMP => {
                 let new_pc = self.registers[self.stack_pointer];
                 self.pc = new_pc.as_usize();
@@ -400,38 +412,29 @@ impl VM {
                     return Err(VMError::MemoryError.into());
                 }
             },
-            Opcode::CALL => {
-                let from = self.current_transaction.as_ref().unwrap().to.unwrap().clone();
-                let to_bytes = self.registers[self.stack_pointer].rlp_bytes().into_vec();
-                let mut id_bytes = [0u8; 20];
-                for (n, byte) in to_bytes.into_iter().take(20).enumerate() {
-                    id_bytes[n] = byte;
-                }
-                let to: H160 = id_bytes.into();
-                let new_code = self.account_code[&to].clone();
-                let old_code = self.code.clone();
-                let old_pc = self.pc;
-                self.code = new_code;
-                self.pc = 0;
-                self.execute()?;
-                self.code = old_code;
-                self.pc = old_pc;
-                let in_offset = self.registers[self.stack_pointer-3];
-                let in_size = self.registers[self.stack_pointer-4];
-                let out_offset = self.registers[self.stack_pointer-5];
-                let out_size = self.registers[self.stack_pointer-6];
-                if let Some(ref mut mem) = self.memory {
-                    let slice = mem.read_slice(out_offset.into(), in_size.into());
-                    self.registers[self.stack_pointer-6] = slice.into();
+            Opcode::CALL => self.execute_call()?,
+            Opcode::CALLCODE => self.execute_call()?,
+            Opcode::RETURN => {
+                self.pc = self.code.len();
+                let offset = self.registers[self.stack_pointer];
+                let size = self.registers[self.stack_pointer-1];
+                if let Some(ref mem) = self.memory {
+                    let info = mem.read_slice(offset.into(), size.into());
+                    self.registers[self.stack_pointer] = info.into();
                 } else {
                     return Err(VMError::MemoryError.into());
                 }
             },
-            Opcode::CALLCODE => unimplemented!(),
-            Opcode::RETURN => unimplemented!(),
-            Opcode::DELEGATECALL => unimplemented!(),
-            Opcode::INVALID => unimplemented!(),
-            Opcode::SUICIDE => unimplemented!(),
+            Opcode::DELEGATECALL => self.execute_call()?,
+            Opcode::INVALID => {
+                Err(VMError::InvalidInstruction)?;
+            },
+            Opcode::SUICIDE => {
+                let from = self.current_transaction.as_ref().unwrap().to.unwrap().clone();
+                self.pc = self.code.len();
+                self.account_code.remove(&from);
+                self.accounts.remove(&from);
+            },
             Opcode::SLOAD => {
                 self.stack_pointer -= 1;
                 let s1 = self.registers[self.stack_pointer];
@@ -528,8 +531,38 @@ impl VM {
                     return Err(VMError::MemoryError.into());
                 }
             }
+            _ => unimplemented!(),
         };
         Ok(())
+    }
+
+    fn execute_call(&mut self) -> Result<()> {
+        let from = self.current_transaction.as_ref().unwrap().to.unwrap().clone();
+        let to_bytes = self.registers[self.stack_pointer].rlp_bytes().into_vec();
+        let mut id_bytes = [0u8; 20];
+        for (n, byte) in to_bytes.into_iter().take(20).enumerate() {
+            id_bytes[n] = byte;
+        }
+        let to: H160 = id_bytes.into();
+        let new_code = self.account_code[&to].clone();
+        let old_code = self.code.clone();
+        let old_pc = self.pc;
+        self.code = new_code;
+        self.pc = 0;
+        self.execute()?;
+        self.code = old_code;
+        self.pc = old_pc;
+        let in_offset = self.registers[self.stack_pointer - 3];
+        let in_size = self.registers[self.stack_pointer - 4];
+        let out_offset = self.registers[self.stack_pointer - 5];
+        let out_size = self.registers[self.stack_pointer - 6];
+        if let Some(ref mut mem) = self.memory {
+            let slice = mem.read_slice(out_offset.into(), in_size.into());
+            self.registers[self.stack_pointer - 6] = slice.into();
+            Ok(())
+        } else {
+            return Err(VMError::MemoryError.into());
+        }
     }
 
     /// Utility function to print the values of a range of registers
@@ -557,6 +590,7 @@ impl Default for VM {
             logs: vec![],
             accounts: HashMap::default(),
             account_code: HashMap::default(),
+            account_gas: HashMap::default(),
             current_transaction: None,
             address: None,
         }
