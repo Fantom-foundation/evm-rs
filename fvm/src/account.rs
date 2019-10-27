@@ -13,10 +13,10 @@ use secp256k1::key::{PublicKey, SecretKey};
 use sha2::Sha256;
 use sha3::{Digest, Keccak256};
 use std::collections::HashMap;
+use std::fmt;
 use std::fs::File;
 use std::path::PathBuf;
 use std::string::ToString;
-use std::fmt;
 use uuid;
 
 #[derive(Default, Debug, Serialize, Deserialize)]
@@ -180,9 +180,7 @@ impl Account {
         let passphrase = match keys::get_passphrase() {
             Ok(passphrase) => passphrase,
             Err(e) => {
-                return Err(Error::from(AccountError {
-                    details: e,
-                }));
+                return Err(Error::from(AccountError { details: e }));
             }
         };
 
