@@ -677,7 +677,7 @@ dependencies = [
  "ethereum-types 0.8.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "hmac 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "libvm 0.1.4 (git+https://github.com/Fantom-foundation/libvm)",
+ "libvm 0.1.5 (git+https://github.com/Fantom-foundation/libvm)",
  "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.10.25 (registry+https://github.com/rust-lang/crates.io-index)",
  "pbkdf2 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -852,7 +852,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "libcommon-rs"
 version = "0.0.1"
-source = "git+https://github.com/Fantom-foundation/libcommon-rs#235c1791c312cfa455919562b4370acc2d5eed8a"
+source = "git+https://github.com/Fantom-foundation/libcommon-rs#41ba45e5b7d23107e4fd5bd4460c9aff388b69a3"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -860,13 +860,13 @@ dependencies = [
 
 [[package]]
 name = "libconsensus"
-version = "0.0.5"
-source = "git+https://github.com/Fantom-foundation/libconsensus#abb6a06ec3554a0cd3e8913463320d4db0af1d42"
+version = "0.0.6"
+source = "git+https://github.com/Fantom-foundation/libconsensus#21772b3e4a584fa4b9e659eced0fa8ed2b9ffad7"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-preview 0.3.0-alpha.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "libcommon-rs 0.0.1 (git+https://github.com/Fantom-foundation/libcommon-rs)",
- "libsignature 0.1.0 (git+https://github.com/Fantom-foundation/libsignature)",
+ "libsignature 0.2.0 (git+https://github.com/Fantom-foundation/libsignature)",
  "libtransport 0.0.3 (git+https://github.com/Fantom-foundation/libtransport)",
  "os_pipe 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -875,8 +875,8 @@ dependencies = [
 
 [[package]]
 name = "libhash"
-version = "0.1.0"
-source = "git+https://github.com/Fantom-foundation/libhash#b17475cd052a132bb1409a966a5b88baa926f562"
+version = "0.1.1"
+source = "git+https://github.com/Fantom-foundation/libhash#f98ab42cf10bff71dfb3ef7a70e5f99b85e62a2b"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -894,19 +894,19 @@ dependencies = [
 
 [[package]]
 name = "libsignature"
-version = "0.1.0"
-source = "git+https://github.com/Fantom-foundation/libsignature#ab28c5aba754df7f29c7b3bd3595b05e075ae5b2"
+version = "0.2.0"
+source = "git+https://github.com/Fantom-foundation/libsignature#02f90b2a2d3870a8d6954db4976f2d0c7003edf4"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "libcommon-rs 0.0.1 (git+https://github.com/Fantom-foundation/libcommon-rs)",
- "libhash 0.1.0 (git+https://github.com/Fantom-foundation/libhash)",
+ "libhash 0.1.1 (git+https://github.com/Fantom-foundation/libhash)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "libtransport"
 version = "0.0.3"
-source = "git+https://github.com/Fantom-foundation/libtransport#1964652f527d140d004f965c7d8b10be9220d376"
+source = "git+https://github.com/Fantom-foundation/libtransport#ec1e779814604bd2b93c4367c2d7e0fc32c240dd"
 dependencies = [
  "bincode 1.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -918,12 +918,12 @@ dependencies = [
 
 [[package]]
 name = "libvm"
-version = "0.1.4"
-source = "git+https://github.com/Fantom-foundation/libvm#ea036b2ec4305bd051079986f70cb12eb94400cd"
+version = "0.1.5"
+source = "git+https://github.com/Fantom-foundation/libvm#be926452e81a7c9c1a051e2ee027e83905e028b5"
 dependencies = [
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "libcommon-rs 0.0.1 (git+https://github.com/Fantom-foundation/libcommon-rs)",
- "libconsensus 0.0.5 (git+https://github.com/Fantom-foundation/libconsensus)",
+ "libconsensus 0.0.6 (git+https://github.com/Fantom-foundation/libconsensus)",
  "libtransport 0.0.3 (git+https://github.com/Fantom-foundation/libtransport)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1948,7 +1948,7 @@ dependencies = [
  "futures-preview 0.3.0-alpha.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures-util-preview 0.3.0-alpha.19 (registry+https://github.com/rust-lang/crates.io-index)",
  "fvm 0.1.6",
- "libconsensus 0.0.5 (git+https://github.com/Fantom-foundation/libconsensus)",
+ "libconsensus 0.0.6 (git+https://github.com/Fantom-foundation/libconsensus)",
  "rkv 0.10.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.101 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2066,12 +2066,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum lazy_static 1.4.0 (registry+https://github.com/rust-lang/crates.io-index)" = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 "checksum libc 0.2.62 (registry+https://github.com/rust-lang/crates.io-index)" = "34fcd2c08d2f832f376f4173a231990fa5aef4e99fb569867318a227ef4c06ba"
 "checksum libcommon-rs 0.0.1 (git+https://github.com/Fantom-foundation/libcommon-rs)" = "<none>"
-"checksum libconsensus 0.0.5 (git+https://github.com/Fantom-foundation/libconsensus)" = "<none>"
-"checksum libhash 0.1.0 (git+https://github.com/Fantom-foundation/libhash)" = "<none>"
+"checksum libconsensus 0.0.6 (git+https://github.com/Fantom-foundation/libconsensus)" = "<none>"
+"checksum libhash 0.1.1 (git+https://github.com/Fantom-foundation/libhash)" = "<none>"
 "checksum libloading 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)" = "f2b111a074963af1d37a139918ac6d49ad1d0d5e47f72fd55388619691a7d753"
-"checksum libsignature 0.1.0 (git+https://github.com/Fantom-foundation/libsignature)" = "<none>"
+"checksum libsignature 0.2.0 (git+https://github.com/Fantom-foundation/libsignature)" = "<none>"
 "checksum libtransport 0.0.3 (git+https://github.com/Fantom-foundation/libtransport)" = "<none>"
-"checksum libvm 0.1.4 (git+https://github.com/Fantom-foundation/libvm)" = "<none>"
+"checksum libvm 0.1.5 (git+https://github.com/Fantom-foundation/libvm)" = "<none>"
 "checksum lmdb-rkv 0.12.3 (registry+https://github.com/rust-lang/crates.io-index)" = "605061e5465304475be2041f19967a900175ea1b6d8f47fbab84a84fb8c48452"
 "checksum lmdb-rkv-sys 0.9.5 (registry+https://github.com/rust-lang/crates.io-index)" = "a1e4b19a1fdf5b74bc802cc9aa7c0c86a775e8b872ba9d5a4e606ffc5d076953"
 "checksum log 0.3.9 (registry+https://github.com/rust-lang/crates.io-index)" = "e19e8d5c34a3e0e2223db8e060f9e8264aeeb5c5fc64a4ee9965c062211c024b"

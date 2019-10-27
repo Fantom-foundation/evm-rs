@@ -30,6 +30,7 @@ pub struct VM {
     stack_pointer: usize,
     logs: Vec<Log>,
     current_transaction: Option<Transaction>,
+    current_sender: Option<H160>,
 }
 
 impl VM {
@@ -41,6 +42,7 @@ impl VM {
             account_gas: HashMap::new(),
             address: None,
             current_transaction: None,
+            current_sender: None,
             registers: [0.into(); 1024],
             memory: None,
             storage: None,
@@ -413,7 +415,11 @@ impl VM {
                 }
             },
             Opcode::CALL => self.execute_call()?,
-            Opcode::CALLCODE => self.execute_call()?,
+            Opcode::CALLCODE => {
+                let to = self.current_transaction.as_ref().map(|t| t.to.unwrap()).unwrap();
+                self.current_sender = Some(to);
+                self.execute_call()?
+            },
             Opcode::RETURN => {
                 self.pc = self.code.len();
                 let offset = self.registers[self.stack_pointer];
@@ -430,7 +436,7 @@ impl VM {
                 Err(VMError::InvalidInstruction)?;
             },
             Opcode::SUICIDE => {
-                let from = self.current_transaction.as_ref().unwrap().to.unwrap().clone();
+                let from = self.current_sender.unwrap();
                 self.pc = self.code.len();
                 self.account_code.remove(&from);
                 self.accounts.remove(&from);
@@ -537,7 +543,7 @@ impl VM {
     }
 
     fn execute_call(&mut self) -> Result<()> {
-        let from = self.current_transaction.as_ref().unwrap().to.unwrap().clone();
+        let from = self.current_sender.unwrap();
         let to_bytes = self.registers[self.stack_pointer].rlp_bytes().into_vec();
         let mut id_bytes = [0u8; 20];
         for (n, byte) in to_bytes.into_iter().take(20).enumerate() {
@@ -592,12 +598,13 @@ impl Default for VM {
             account_code: HashMap::default(),
             account_gas: HashMap::default(),
             current_transaction: None,
+            current_sender: None,
             address: None,
         }
     }
 }
 
-impl Cpu<Opcode> for VM {
+impl Cpu<Opcode, H160> for VM {
     fn execute_instruction(&mut self, instruction: Opcode) -> Result<()> {
         self.execute_one_instruction(instruction)
     }
@@ -626,12 +633,13 @@ impl Cpu<Opcode> for VM {
         self.pc += steps;
     }
 
-    fn set_instructions<J: Iterator<Item = Opcode>>(&mut self, i: J) {
+    fn set_instructions<J: Iterator<Item = Opcode>>(&mut self, i: J, sender: H160) {
         let bytes: Vec<u8> = i.map(Opcode::into).collect();
         let transaction: Transaction = serde_json::from_slice(&bytes).unwrap();
         let code = transaction.data.clone();
         self.code = code;
         self.current_transaction = Some(transaction);
+        self.current_sender = Some(sender);
     }
 }
 
