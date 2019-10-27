@@ -5,7 +5,7 @@ use tiny_keccak::Keccak;
 
 use errors::{Result, VMError};
 use eth_log::Log;
-use libvm::Cpu;
+use libvm::{Cpu, Instruction};
 use memory::{Memory, SimpleMemory};
 pub use opcodes::Opcode;
 use std::array::FixedSizeArray;
@@ -320,13 +320,53 @@ impl VM {
                     self.registers[self.stack_pointer] = self.address.unwrap().clone().into();
                 }
             }
-            Opcode::BALANCE => unimplemented!(),
-            Opcode::ORIGIN => unimplemented!(),
-            Opcode::CALLER => unimplemented!(),
-            Opcode::CALLVALUE => unimplemented!(),
-            Opcode::CALLDATALOAD => unimplemented!(),
-            Opcode::CALLDATASIZE => unimplemented!(),
-            Opcode::CALLDATACOPY => unimplemented!(),
+            Opcode::BALANCE => {
+                let sender = self.current_sender.ok_or(VMError::NoSender)?;
+                self.registers[self.stack_pointer] = self.account_gas[&sender].into();
+            },
+            Opcode::ORIGIN => {
+                let sender = self.current_sender.ok_or(VMError::NoSender)?;
+                let sender_bytes = sender.0.to_vec();
+                self.registers[self.stack_pointer] = (sender_bytes.as_slice()).into();
+            },
+            Opcode::CALLER => {
+                let to = self.current_transaction.as_ref().map(|t| t.to.unwrap()).unwrap();
+                let to_bytes = to.0.to_vec();
+                self.registers[self.stack_pointer] = (to_bytes.as_slice()).into();
+            },
+            Opcode::CALLVALUE => {
+                let value = self.current_transaction.as_ref().map(|t| t.value).unwrap();
+                let mut bytes = vec![];
+                #[cfg(target_endian = "big")]
+                value.to_bit_endian(&mut bytes);
+                #[cfg(not(target_endian = "big"))]
+                value.to_little_endian(&mut bytes);
+                self.registers[self.stack_pointer] = bytes.as_slice().into();
+            },
+            Opcode::CALLDATALOAD => {
+                let data = self.current_transaction.as_ref().map(|t| t.data.clone()).unwrap();
+                for (index, byte) in data.into_iter().enumerate() {
+                    self.registers[self.stack_pointer-index] = (byte as usize).into();
+                }
+            },
+            Opcode::CALLDATASIZE => {
+                let data_size = self.current_transaction.as_ref().map(|t| t.data.len()).unwrap();
+                self.registers[self.stack_pointer] = data_size.into();
+            },
+            Opcode::CALLDATACOPY => {
+                let data = self.current_transaction.as_ref().map(|t| t.data.clone()).unwrap();
+                let mem_offset = self.registers[self.stack_pointer].as_usize();
+                let data_offset = self.registers[self.stack_pointer-1].as_usize();
+                let size = self.registers[self.stack_pointer-2].as_usize();
+                if let Some(ref mut mem) = &mut self.memory {
+                    for i in 0..size {
+                        let value = data[data_offset + i] as usize;
+                        mem.write((mem_offset + i).into(), value.into())?;
+                    }
+                } else {
+                    return Err(VMError::MemoryError.into());
+                }
+            },
             Opcode::CODESIZE => {
                 self.registers[self.stack_pointer] = self.code.len().into();
             }
@@ -350,11 +390,36 @@ impl VM {
                     }
                 }
             }
-            Opcode::GASPRICE => unimplemented!(),
-            Opcode::EXTCODESIZE => unimplemented!(),
-            Opcode::EXTCODECOPY => unimplemented!(),
-            Opcode::RETURNDATACOPY => unimplemented!(),
-            Opcode::RETURNDATASIZE => {
+            Opcode::GASPRICE => {
+                let gas_price = self.current_transaction.as_ref().map(|t| t.gas_price).unwrap();
+                let mut bytes = vec![];
+                #[cfg(target_endian = "big")]
+                gas_price.to_bit_endian(&mut bytes);
+                #[cfg(not(target_endian = "big"))]
+                gas_price.to_little_endian(&mut bytes);
+                self.registers[self.stack_pointer] = bytes.as_slice().into();
+            },
+            Opcode::EXTCODESIZE => {
+                let account = self.current_sender.ok_or(VMError::NoSender)?;
+                let size = self.account_code.get(&account).map(|c| c.len()).ok_or(VMError::NoCodeInAccount)?;
+                self.registers[self.stack_pointer] = size.into();
+            },
+            Opcode::EXTCODECOPY => {
+                let memory_offset = self.registers[self.stack_pointer];
+                let code_offset = self.registers[self.stack_pointer - 1].as_usize();
+                let size = self.registers[self.stack_pointer - 2].as_usize();
+                let account = self.current_sender.ok_or(VMError::NoSender)?;
+                let code = self.account_code.get(&account).map(|c| c.clone()).ok_or(VMError::NoCodeInAccount)?;
+                if let Some(ref mut mem) = &mut self.memory {
+                    for i in 0..size {
+                        let value = code[code_offset - i] as usize;
+                        mem.write(memory_offset + i.into(), value.into())?;
+                    }
+                } else {
+                    return Err(VMError::MemoryError.into());
+                }
+            },
+            Opcode::RETURNDATACOPY => {
                 let memory_offset = self.registers[self.stack_pointer];
                 let output_offset = self.registers[self.stack_pointer - 1].as_usize();
                 let size = self.registers[self.stack_pointer - 2].as_usize();
@@ -366,6 +431,10 @@ impl VM {
                 } else {
                     return Err(VMError::MemoryError.into());
                 }
+            },
+            Opcode::RETURNDATASIZE => {
+                let opcode: Opcode = (&self.code[self.pc-1]).into();
+                self.registers[self.stack_pointer] = opcode.size()?.into();
             },
             Opcode::PC => {
                 self.registers[self.stack_pointer] = (self.pc - 1).into();
@@ -436,7 +505,7 @@ impl VM {
                 Err(VMError::InvalidInstruction)?;
             },
             Opcode::SUICIDE => {
-                let from = self.current_sender.unwrap();
+                let from = self.current_sender.ok_or(VMError::NoSender)?;
                 self.pc = self.code.len();
                 self.account_code.remove(&from);
                 self.accounts.remove(&from);
@@ -543,7 +612,7 @@ impl VM {
     }
 
     fn execute_call(&mut self) -> Result<()> {
-        let from = self.current_sender.unwrap();
+        let from = self.current_sender.ok_or(VMError::NoSender)?;
         let to_bytes = self.registers[self.stack_pointer].rlp_bytes().into_vec();
         let mut id_bytes = [0u8; 20];
         for (n, byte) in to_bytes.into_iter().take(20).enumerate() {

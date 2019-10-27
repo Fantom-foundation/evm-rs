@@ -13,6 +13,10 @@ pub enum VMError {
     MemoryError,
     #[fail(display = "Invalid instruction")]
     InvalidInstruction,
+    #[fail(display = "No sender")]
+    NoSender,
+    #[fail(display = "No code in account")]
+    NoCodeInAccount,
 }
 
 #[derive(Debug, Clone, Fail)]
