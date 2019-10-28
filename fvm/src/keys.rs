@@ -118,7 +118,7 @@ pub fn passwords_from_files(files: &[String]) -> Result<Vec<Password>, String> {
 }
 
 mod tests {
-    use keys::generate_random_keypair;
+    use super::generate_random_keypair;
 
     #[test]
     fn test_generate_random_keypair() {

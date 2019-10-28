@@ -1,6 +1,6 @@
 //! Module that contains the VM that executes bytecode
 
-use bigint::{Address, H256, M256, MI256, U128, U256};
+use bigint::{Address, H256, M256, MI256, U256};
 use tiny_keccak::Keccak;
 
 use account::Account;
@@ -676,7 +676,7 @@ impl VM {
             self.registers[self.stack_pointer - 6] = slice.into();
             Ok(())
         } else {
-            return Err(VMError::MemoryError.into());
+            Err(VMError::MemoryError.into())
         }
     }
 
