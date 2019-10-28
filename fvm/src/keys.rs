@@ -69,10 +69,14 @@ pub fn generate_random_keypair() -> Result<(PublicKey, SecretKey), Error> {
 pub fn get_passphrase() -> Result<Password, String> {
     const STDIN_ERROR: &str = "Unable to ask for password on non-interactive terminal.";
     print!("Enter password: ");
-    io::stdout().flush().map_err(|_| "Error flushing stdout".to_owned())?;
+    io::stdout()
+        .flush()
+        .map_err(|_| "Error flushing stdout".to_owned())?;
     let password = read_password().map_err(|_| STDIN_ERROR.to_owned())?.into();
     print!("Repeat password: ");
-    io::stdout().flush().map_err(|_| "Error flushing stdout".to_owned())?;
+    io::stdout()
+        .flush()
+        .map_err(|_| "Error flushing stdout".to_owned())?;
     let password_repeat = read_password().map_err(|_| STDIN_ERROR.to_owned())?.into();
     if password != password_repeat {
         return Err("Passwords do not match!".into());

@@ -35,7 +35,11 @@ pub struct Account {
 
 impl Account {
     /// Creates and returns a new Account
-    pub fn new(id: String, version: usize, base_directory: PathBuf) -> Result<Account, Box<dyn Error>> {
+    pub fn new(
+        id: String,
+        version: usize,
+        base_directory: PathBuf,
+    ) -> Result<Account, Box<dyn Error>> {
         let secp = secp256k1::Secp256k1::with_caps(secp256k1::ContextFlag::Full);
         let mut hasher = Keccak256::new();
         let (p, s) = keys::generate_random_keypair()?;
@@ -93,7 +97,13 @@ impl Account {
     }
 
     /// Part of the Builder, allows setting the params when using pdkdf2
-    pub fn with_pdkdf2_params(mut self, dklen: usize, salt: String, prf: String, c: usize) -> Account {
+    pub fn with_pdkdf2_params(
+        mut self,
+        dklen: usize,
+        salt: String,
+        prf: String,
+        c: usize,
+    ) -> Account {
         self.crypto.kdfparams.dklen = Some(dklen);
         self.crypto.kdfparams.salt = Some(salt);
         self.crypto.kdfparams.prf = Some(prf);
@@ -114,7 +124,8 @@ impl Account {
         }
         // Takes the slice of data containing the secret key and encrypts it
         let data: &[u8] = &secret_key[0..secret_key.len()];
-        let ciphertext = symm::encrypt(cipher, &key, Some(&iv), data).expect("Unable to encrypt secret key");
+        let ciphertext =
+            symm::encrypt(cipher, &key, Some(&iv), data).expect("Unable to encrypt secret key");
         // Return the hex and iv
         (ciphertext.to_hex(), iv)
     }
@@ -339,7 +350,8 @@ mod tests {
 
     fn get_test_data_directory() -> PathBuf {
         let path = "/tmp/fantom-test/".to_string();
-        const DIRECTORIES: [&'static str; 6] = ["data", "raft", "eth", "lachesis", "keys", "chaindata"];
+        const DIRECTORIES: [&'static str; 6] =
+            ["data", "raft", "eth", "lachesis", "keys", "chaindata"];
         for end in &DIRECTORIES {
             let _ = fs::create_dir_all(path.clone() + end);
         }

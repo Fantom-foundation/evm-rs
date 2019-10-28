@@ -104,25 +104,29 @@ impl VM {
             }
             Opcode::ADD => {
                 self.stack_pointer -= 1;
-                let result = self.registers[self.stack_pointer] + self.registers[self.stack_pointer - 1];
+                let result =
+                    self.registers[self.stack_pointer] + self.registers[self.stack_pointer - 1];
                 self.registers[self.stack_pointer - 1] = result;
                 self.pc += 1;
             }
             Opcode::MUL => {
                 self.stack_pointer -= 1;
-                let result = self.registers[self.stack_pointer] * self.registers[self.stack_pointer - 1];
+                let result =
+                    self.registers[self.stack_pointer] * self.registers[self.stack_pointer - 1];
                 self.registers[self.stack_pointer - 1] = result;
                 self.pc += 1;
             }
             Opcode::SUB => {
                 self.stack_pointer -= 1;
-                let result = self.registers[self.stack_pointer] - self.registers[self.stack_pointer - 1];
+                let result =
+                    self.registers[self.stack_pointer] - self.registers[self.stack_pointer - 1];
                 self.registers[self.stack_pointer - 1] = result;
                 self.pc += 1;
             }
             Opcode::DIV => {
                 self.stack_pointer -= 1;
-                let result = self.registers[self.stack_pointer] / self.registers[self.stack_pointer - 1];
+                let result =
+                    self.registers[self.stack_pointer] / self.registers[self.stack_pointer - 1];
                 self.registers[self.stack_pointer - 1] = result;
                 self.pc += 1;
             }
@@ -145,13 +149,15 @@ impl VM {
             }
             Opcode::MOD => {
                 self.stack_pointer -= 1;
-                let result = self.registers[self.stack_pointer] % self.registers[self.stack_pointer - 1];
+                let result =
+                    self.registers[self.stack_pointer] % self.registers[self.stack_pointer - 1];
                 self.registers[self.stack_pointer - 1] = result;
                 self.pc += 1;
             }
             Opcode::ADDMOD => {
                 self.stack_pointer -= 1;
-                let result = (self.registers[self.stack_pointer] + self.registers[self.stack_pointer - 1])
+                let result = (self.registers[self.stack_pointer]
+                    + self.registers[self.stack_pointer - 1])
                     % self.registers[self.stack_pointer - 2];
                 if result == self.registers[self.stack_pointer - 2] {
                     self.registers[self.stack_pointer - 2] = result;
@@ -161,7 +167,8 @@ impl VM {
             }
             Opcode::MULMOD => {
                 self.stack_pointer -= 1;
-                let result = (self.registers[self.stack_pointer] * self.registers[self.stack_pointer - 1])
+                let result = (self.registers[self.stack_pointer]
+                    * self.registers[self.stack_pointer - 1])
                     % self.registers[self.stack_pointer - 2];
                 if result == self.registers[self.stack_pointer - 2] {
                     self.registers[self.stack_pointer - 2] = result;
@@ -330,7 +337,11 @@ impl VM {
                 self.registers[self.stack_pointer] = (sender_bytes.as_slice()).into();
             }
             Opcode::CALLER => {
-                let to = self.current_transaction.as_ref().map(|t| t.to.unwrap()).unwrap();
+                let to = self
+                    .current_transaction
+                    .as_ref()
+                    .map(|t| t.to.unwrap())
+                    .unwrap();
                 let to_bytes = to.0.to_vec();
                 self.registers[self.stack_pointer] = (to_bytes.as_slice()).into();
             }
@@ -344,17 +355,29 @@ impl VM {
                 self.registers[self.stack_pointer] = bytes.as_slice().into();
             }
             Opcode::CALLDATALOAD => {
-                let data = self.current_transaction.as_ref().map(|t| t.data.clone()).unwrap();
+                let data = self
+                    .current_transaction
+                    .as_ref()
+                    .map(|t| t.data.clone())
+                    .unwrap();
                 for (index, byte) in data.into_iter().enumerate() {
                     self.registers[self.stack_pointer - index] = (byte as usize).into();
                 }
             }
             Opcode::CALLDATASIZE => {
-                let data_size = self.current_transaction.as_ref().map(|t| t.data.len()).unwrap();
+                let data_size = self
+                    .current_transaction
+                    .as_ref()
+                    .map(|t| t.data.len())
+                    .unwrap();
                 self.registers[self.stack_pointer] = data_size.into();
             }
             Opcode::CALLDATACOPY => {
-                let data = self.current_transaction.as_ref().map(|t| t.data.clone()).unwrap();
+                let data = self
+                    .current_transaction
+                    .as_ref()
+                    .map(|t| t.data.clone())
+                    .unwrap();
                 let mem_offset = self.registers[self.stack_pointer].as_usize();
                 let data_offset = self.registers[self.stack_pointer - 1].as_usize();
                 let size = self.registers[self.stack_pointer - 2].as_usize();
@@ -391,7 +414,11 @@ impl VM {
                 }
             }
             Opcode::GASPRICE => {
-                let gas_price = self.current_transaction.as_ref().map(|t| t.gas_price).unwrap();
+                let gas_price = self
+                    .current_transaction
+                    .as_ref()
+                    .map(|t| t.gas_price)
+                    .unwrap();
                 let mut bytes = vec![];
                 #[cfg(target_endian = "big")]
                 gas_price.to_bit_endian(&mut bytes);
@@ -494,7 +521,11 @@ impl VM {
             }
             Opcode::CALL => self.execute_call()?,
             Opcode::CALLCODE => {
-                let to = self.current_transaction.as_ref().map(|t| t.to.unwrap()).unwrap();
+                let to = self
+                    .current_transaction
+                    .as_ref()
+                    .map(|t| t.to.unwrap())
+                    .unwrap();
                 self.current_sender = Some(to);
                 self.execute_call()?
             }
@@ -1002,7 +1033,9 @@ mod tests {
     #[test]
     fn test_log_opcode() {
         let default_code = vec![0x60, 0x05, 0x60, 0x01, 0x60, 0x00, 0x60, 0x01, 0xa1];
-        let mut vm = VM::new(default_code).with_simple_memory().with_random_address();
+        let mut vm = VM::new(default_code)
+            .with_simple_memory()
+            .with_random_address();
         let result = vm.execute_one();
         assert!(result.is_ok());
         let result = vm.execute_one();
@@ -1019,7 +1052,9 @@ mod tests {
     #[test]
     fn test_sload_opcode() {
         let default_code = vec![0x60, 0x05, 0x60, 0x01, 0x54];
-        let mut vm = VM::new(default_code).with_simple_memory().with_random_address();
+        let mut vm = VM::new(default_code)
+            .with_simple_memory()
+            .with_random_address();
         vm.storage = Some(Storage::new(vm.address.unwrap()));
         if let Some(ref mut store) = vm.storage {
             assert!(store.write(0.into(), 100.into()).is_ok());
@@ -1031,7 +1066,9 @@ mod tests {
     #[test]
     fn test_store_opcode() {
         let default_code = vec![0x60, 0x00, 0x60, 0x05, 0x55];
-        let mut vm = VM::new(default_code).with_simple_memory().with_random_address();
+        let mut vm = VM::new(default_code)
+            .with_simple_memory()
+            .with_random_address();
         vm.storage = Some(Storage::new(vm.address.unwrap()));
         assert!(vm.execute_one().is_ok());
         assert!(vm.execute_one().is_ok());
@@ -1040,7 +1077,9 @@ mod tests {
     #[test]
     fn test_sha3_opcode() {
         let default_code = vec![0x60, 0x05, 0x60, 0x00, 0x52, 0x20];
-        let mut vm = VM::new(default_code).with_simple_memory().with_random_address();
+        let mut vm = VM::new(default_code)
+            .with_simple_memory()
+            .with_random_address();
         assert!(vm.execute_one().is_ok());
         assert!(vm.execute_one().is_ok());
         assert!(vm.execute_one().is_ok());

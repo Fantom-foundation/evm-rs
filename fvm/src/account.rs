@@ -94,7 +94,13 @@ impl Account {
     }
 
     /// Part of the Builder, allows setting the params when using pdkdf2
-    pub fn with_pdkdf2_params(mut self, dklen: usize, salt: String, prf: String, c: usize) -> Account {
+    pub fn with_pdkdf2_params(
+        mut self,
+        dklen: usize,
+        salt: String,
+        prf: String,
+        c: usize,
+    ) -> Account {
         self.crypto.kdfparams.dklen = Some(dklen);
         self.crypto.kdfparams.salt = Some(salt);
         self.crypto.kdfparams.prf = Some(prf);
@@ -115,7 +121,8 @@ impl Account {
         }
         // Takes the slice of data containing the secret key and encrypts it
         let data: &[u8] = &secret_key[0..secret_key.len()];
-        let ciphertext = symm::encrypt(cipher, &key, Some(&iv), data).expect("Unable to encrypt secret key");
+        let ciphertext =
+            symm::encrypt(cipher, &key, Some(&iv), data).expect("Unable to encrypt secret key");
         // Return the hex and iv
         (ciphertext.to_hex(), iv)
     }

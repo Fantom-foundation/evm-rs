@@ -10,7 +10,11 @@ impl Miner {
         Miner {}
     }
 
-    pub fn mine(&self, header: &block::Header, epoch: usize) -> (ethereum_types::H64, ethereum_types::H256) {
+    pub fn mine(
+        &self,
+        header: &block::Header,
+        epoch: usize,
+    ) -> (ethereum_types::H64, ethereum_types::H256) {
         println!("Getting sizes...");
         let full_size = ethash::get_full_size(epoch);
         let cache_size = ethash::get_cache_size(epoch);
@@ -30,7 +34,13 @@ impl Miner {
         let diff = header.difficulty.as_u32();
         let difficulty = ethereum_types::U256::from(diff);
         println!("Mining difficulty is: {:?}", difficulty);
-        ethash::mine(header, full_size, &dataset, ethereum_types::H64::random(), difficulty)
+        ethash::mine(
+            header,
+            full_size,
+            &dataset,
+            ethereum_types::H64::random(),
+            difficulty,
+        )
     }
 }
 

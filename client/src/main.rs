@@ -68,7 +68,8 @@ pub fn main() {
     debug!("Checking for genesis block...");
     if genesis_block_exists(base_dir) {
         debug!("Genesis block exists!");
-        let _genesis_block_data = load_genesis_block(base_dir).expect("Unable to load genesis block");
+        let _genesis_block_data =
+            load_genesis_block(base_dir).expect("Unable to load genesis block");
     } else {
         debug!("Genesis block does not exist, please create it.");
     }
@@ -105,7 +106,10 @@ fn create_directories(path: &str) -> Result<(), io::Error> {
                 debug!("Directory {:?} created", dir_name);
             }
             Err(e) => {
-                error!("Error creating directory {:?}. Error was: {:?}", dir_name, e);
+                error!(
+                    "Error creating directory {:?}. Error was: {:?}",
+                    dir_name, e
+                );
             }
         }
     }

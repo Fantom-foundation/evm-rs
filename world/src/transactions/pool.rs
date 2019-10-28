@@ -36,7 +36,9 @@ impl<'a> Consensus<'a, Transaction> for TransactionPool {
     type Configuration = EthashConfiguration;
 
     fn new(cfg: Self::Configuration) -> Result<TransactionPool> {
-        Ok(TransactionPool { transactions: vec![] })
+        Ok(TransactionPool {
+            transactions: vec![],
+        })
     }
 
     fn shutdown(&mut self) -> Result<()> {

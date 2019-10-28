@@ -17,7 +17,10 @@ pub type RDB = std::sync::Arc<std::sync::RwLock<rkv::Rkv>>;
 pub fn create_temporary_db() -> Result<(RDB, SingleStore), StoreError> {
     let tempdir = TempDir::new("testing").unwrap();
     let root = tempdir.path();
-    let created_arc = Manager::singleton().write().unwrap().get_or_create(root, Rkv::new)?;
+    let created_arc = Manager::singleton()
+        .write()
+        .unwrap()
+        .get_or_create(root, Rkv::new)?;
     if let Ok(k) = created_arc.read() {
         if let Ok(a) = k.open_single("store", StoreOptions::create()) {
             return Ok((created_arc.clone(), a));
@@ -31,7 +34,10 @@ pub fn create_persistent_db(path: &str, name: &str) -> Result<(RDB, SingleStore)
     let root = path.to_string() + name + "/";
     fs::create_dir_all(root.clone())?;
     let root = Path::new(&root);
-    let created_arc = Manager::singleton().write().unwrap().get_or_create(root, Rkv::new)?;
+    let created_arc = Manager::singleton()
+        .write()
+        .unwrap()
+        .get_or_create(root, Rkv::new)?;
     if let Ok(k) = created_arc.read() {
         if let Ok(a) = k.open_single("store", StoreOptions::create()) {
             return Ok((created_arc.clone(), a));

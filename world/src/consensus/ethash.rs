@@ -135,7 +135,11 @@ pub fn calc_dataset_item(cache: &[u8], i: usize) -> H512 {
     for j in 0..64 {
         mix[j] = cache[(i % n) * 64 + j];
     }
-    let mix_first32 = mix.as_ref().read_u32::<LittleEndian>().unwrap().bitxor(i as u32);
+    let mix_first32 = mix
+        .as_ref()
+        .read_u32::<LittleEndian>()
+        .unwrap()
+        .bitxor(i as u32);
     let _ = mix.as_mut().write_u32::<LittleEndian>(mix_first32);
     {
         let mut remix = [0u8; 64];
@@ -172,7 +176,12 @@ pub fn make_dataset(dataset: &mut [u8], cache: &[u8]) {
 
 /// "Main" function of Ethash, calculating the mix digest and result given the
 /// header and nonce.
-pub fn hashimoto<F: Fn(usize) -> H512>(header_hash: H256, nonce: H64, full_size: usize, lookup: F) -> (H256, H256) {
+pub fn hashimoto<F: Fn(usize) -> H512>(
+    header_hash: H256,
+    nonce: H64,
+    full_size: usize,
+    lookup: F,
+) -> (H256, H256) {
     let n = full_size / HASH_BYTES;
     let w = MIX_BYTES / WORD_BYTES;
     const MIXHASHES: usize = MIX_BYTES / HASH_BYTES;
@@ -214,8 +223,14 @@ pub fn hashimoto<F: Fn(usize) -> H512>(header_hash: H256, nonce: H64, full_size:
             (&mix[(j * 4)..]).read_u32::<LittleEndian>().unwrap(),
             (&mix[((j + 1) * 4)..]).read_u32::<LittleEndian>().unwrap(),
         );
-        let b = fnv(a, (&mix[((j + 2) * 4)..]).read_u32::<LittleEndian>().unwrap());
-        let c = fnv(b, (&mix[((j + 3) * 4)..]).read_u32::<LittleEndian>().unwrap());
+        let b = fnv(
+            a,
+            (&mix[((j + 2) * 4)..]).read_u32::<LittleEndian>().unwrap(),
+        );
+        let c = fnv(
+            b,
+            (&mix[((j + 3) * 4)..]).read_u32::<LittleEndian>().unwrap(),
+        );
 
         let _ = (&mut cmix[j..]).write_u32::<LittleEndian>(c);
     }
@@ -235,12 +250,24 @@ pub fn hashimoto<F: Fn(usize) -> H512>(header_hash: H256, nonce: H64, full_size:
 
 /// Ethash used by a light client. Only stores the 16MB cache rather than the
 /// full dataset.
-pub fn hashimoto_light(header_hash: H256, nonce: H64, full_size: usize, cache: &[u8]) -> (H256, H256) {
-    hashimoto(header_hash, nonce, full_size, |i| calc_dataset_item(cache, i))
+pub fn hashimoto_light(
+    header_hash: H256,
+    nonce: H64,
+    full_size: usize,
+    cache: &[u8],
+) -> (H256, H256) {
+    hashimoto(header_hash, nonce, full_size, |i| {
+        calc_dataset_item(cache, i)
+    })
 }
 
 /// Ethash used by a full client. Stores the whole dataset in memory.
-pub fn hashimoto_full(header_hash: H256, nonce: H64, full_size: usize, dataset: &[u8]) -> (H256, H256) {
+pub fn hashimoto_full(
+    header_hash: H256,
+    nonce: H64,
+    full_size: usize,
+    dataset: &[u8],
+) -> (H256, H256) {
     hashimoto(header_hash, nonce, full_size, |i| {
         let mut r = [0u8; 64];
         for j in 0..64 {
