@@ -118,6 +118,7 @@ pub fn passwords_from_files(files: &[String]) -> Result<Vec<Password>, String> {
 }
 
 mod tests {
+    #[allow(unused_import)]
     use super::generate_random_keypair;
 
     #[test]
