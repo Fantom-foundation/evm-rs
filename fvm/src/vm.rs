@@ -443,7 +443,7 @@ impl VM {
                 let code = self
                     .account_code
                     .get(&account)
-                    .map(|c| c.clone())
+                    .cloned()
                     .ok_or(VMError::NoCodeInAccount)?;
                 if let Some(ref mut mem) = &mut self.memory {
                     for i in 0..size {
@@ -541,9 +541,7 @@ impl VM {
                 }
             }
             Opcode::DELEGATECALL => self.execute_call()?,
-            Opcode::INVALID => {
-                Err(VMError::InvalidInstruction)?;
-            }
+            Opcode::INVALID => return Err(VMError::InvalidInstruction.into()),
             Opcode::SUICIDE => {
                 let from = self.current_sender.ok_or(VMError::NoSender)?;
                 self.pc = self.code.len();
@@ -652,7 +650,7 @@ impl VM {
     }
 
     fn execute_call(&mut self) -> Result<()> {
-        let from = self.current_sender.ok_or(VMError::NoSender)?;
+        self.current_sender.ok_or(VMError::NoSender)?;
         let to_bytes = self.registers[self.stack_pointer].rlp_bytes().into_vec();
         let mut id_bytes = [0u8; 20];
         for (n, byte) in to_bytes.into_iter().take(20).enumerate() {
@@ -667,10 +665,10 @@ impl VM {
         self.execute()?;
         self.code = old_code;
         self.pc = old_pc;
-        let in_offset = self.registers[self.stack_pointer - 3];
+        let _in_offset = self.registers[self.stack_pointer - 3];
         let in_size = self.registers[self.stack_pointer - 4];
         let out_offset = self.registers[self.stack_pointer - 5];
-        let out_size = self.registers[self.stack_pointer - 6];
+        let _out_size = self.registers[self.stack_pointer - 6];
         if let Some(ref mut mem) = self.memory {
             let slice = mem.read_slice(out_offset.into(), in_size.into());
             self.registers[self.stack_pointer - 6] = slice.into();

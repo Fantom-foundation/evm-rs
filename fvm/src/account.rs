@@ -177,7 +177,7 @@ impl Account {
     pub fn account_from_passphrase(
         iv: &[u8],
         ciphertext: &str,
-        address: &str,
+        _address: &str,
         base_directory: &str,
     ) -> Result<Box<Account>, Error> {
         // This is the passphrase we'll use to encrypt their secret key, and they will need to
