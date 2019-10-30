@@ -69,7 +69,7 @@ matrix:
       env: CARGO_TEST=1
     - stage: notify-website
       env:
-        secure: '0gwIIOp2DEydbVr4C14EX5bV1vAKsNIT4NmMBeZjZFgntCTX6Yw4XiatovNwZdqAGlz3gL88IqRQNpDGoY80shlSo3xorZ1Bt+oBMmY3QJdP+thYU6PLKF12f9KbpTqEywUpIeByzTgPJCuqTOXRfXavIHET2WQmzjUY1jgxW3ASzaefN09yOmOO0cdnod0vzPo7a8uT9gS54eGlM0G4+Usdq6d3v13MRu1Cxn5lYlzrGokZ5aeykK6taB5RlZWL8K21LIsuc1Z+7bNChPGR3OhpBFhfZNG7ST5+6NZgZjOQ12SsoTCNBZGiMGiMl0QOY6H7sfPbdKvrKZNCHXecXbN1qjRa89YCa7eY8di1iSw0PUwom7v9YAVFPx7X0o5+vzKzfKGwq8+I0ohFPLQt9oIfrAk+EyorUPy7FNwWKigGDRjkVRsthk0U01hxZ9KW49HMUske+hWsMMVrMWxe9BnuIn5HJsr0DV1eikGdL0QL78MNlvhxKPFRfYhIoDMNEHUF+8Bb4pPsLhlZ8hF3cicqoLwG9TtGZ4GUtcwZTgMqHp7F61cNtwpw9AirD0kfcMHUnvHcr9Y6XXfiiCiMJkC1C4n/Td/f8lE4cgzgzYlUvF0QvC2jUL9jVqUSCRDtQLmX9EOdWJiLWOfswlPevxpcrHFHuK2PnpIFPeXnoZE='
+        secure: 'AKGfwPx0Z1Y9DRXBIW/KJvWco2LPD4nOayfCrIpUIwFvKCrKryQhbEkGDBikX4zFvtJot4S1KHd7Md/hKzSs6AIVDU1LAwxNgnqvcV2/NstjiE03wneEAAkncofWfamys6YNmTqSPgmN6DwL9fvg/KC0zy4Nlnz0S7L5/vRPgz4n1TLhPm1w2PVgnn19of30Kll+Pkm2Vk+A+Pg54zrYxODaoQ63owG3HG02b3ZHXRzdr5TNCwJ6JbX+vYkihcbZvmqHFdxsY8iBGUbKU8CZ3oD+jsCqP29A/GZLGZGOhky8sWNNpQ7TnPMduQ53qjsdBr3vDypMMeHpN3218rdH+tbBOfEKmJHQyEPmeuxAPUHjOuCxQxzKjk8y+towTUSt/Zf3YfKeH62fRCKzDGVhyRLsNmroWtFnPnXD9tRJNtQ5zro847Q9JBXP5eG7orgu0ixNLfV93OsknR99ftNc38tBmMdBnCUnUvfoofDExLV//sOZ4qLRasmPjQKL2U76QK+tUv7T5hiuP83BS+k/nNHCEJftZyAF9kYEF1hi4lI9OTDtkjkexOlHZMMK/0eZWAawQ+28mHAAbEFLjDIu4hw2AbzI7uhZ/2n3tvlVIl2m7NEHX/csSmINbIKhnZ/cMsUWHtwS3BNXgCHKsUu6YPooaI23Yx9rCEQxYs8g32Y='
       script:
         - email_author="$(git log -1 --pretty=format:'%an <%ce>')"
         - author="${email_author% *}"; git config --global user.name "$author"

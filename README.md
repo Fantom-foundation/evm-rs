@@ -32,7 +32,7 @@ $ rustup component add rustfmt
 # Install clippy (Rust linter)
 $ rustup component add clippy
 # Clone this repo
-$ git clone https://github.com/Fantom-foundation/light-cli-rs && cd light-cli-rs
+$ git clone https://github.com/Fantom-foundation/evm-rs && cd evm-rs
 # Run tests
 $ cargo test
 # Format, build and test
