@@ -56,7 +56,7 @@ script:
       else
           features='--features "$FEATURES"'
       fi
-      cargo test --all "$features"
+      cargo test --all $features
     fi
 
 matrix:
