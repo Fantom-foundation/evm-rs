@@ -31,5 +31,5 @@ mod keys;
 mod memory;
 mod opcodes;
 mod storage;
-mod transaction;
+pub mod transaction;
 pub mod vm;
