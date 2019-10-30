@@ -1,6 +1,6 @@
 [package]
 name = "evm-rs"
-version = "0.1.7"
+version = "0.1.8"
 authors = ["Agustin Chiappe Berrini <jnieve@gmail.com>"]
 
 [dependencies]
@@ -11,7 +11,7 @@ etcommon-trie = "0.4.0"
 etcommon-block = "0.5.1"
 etcommon-rlp = "0.2.4"
 ethereum-types = "0.8.0"
-env_logger = "0.7.0"
+env_logger = "^0.7.1"
 failure = "0.1.6"
 hmac = "0.7.1"
 libvm = { git = "https://github.com/Fantom-foundation/libvm", version = "~0.1.5" }
