@@ -1,6 +1,8 @@
 use ethereum_types::{H160, U256};
+use std::fmt::Display;
+use std::fmt::Formatter;
 
-#[derive(Debug, Default, Deserialize, Clone, PartialEq, Serialize)]
+#[derive(Debug, Default, Deserialize, Clone, PartialEq, Serialize, Hash)]
 pub struct Transaction {
     /// Nonce
     pub nonce: U256,
@@ -21,4 +23,10 @@ pub struct Transaction {
     pub r: U256,
     /// The S field of the signature.
     pub s: U256,
+}
+
+impl Display for Transaction {
+    fn fmt(&self, f: &mut Formatter) -> core::fmt::Result {
+        write!(f, "{:#?}", self)
+    }
 }
