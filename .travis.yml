@@ -51,12 +51,12 @@ script:
     elif [ -n "$CLIPPY" ]; then
       cargo clippy --all -- -D warnings
     elif [ -n "$CARGO_TEST" ]; then
-      if [[ grep -qF '[workspace]' Cargo.toml || ! -z "$FEATURES" ]]; then
+      if grep -qF '[workspace]' Cargo.toml || [ ! -z "$FEATURES" ]; then
           features='--all-features'
       else
           features='--features '"$FEATURES"
       fi
-      cargo test --all $features
+      cargo test --all "$features"
     fi
 
 matrix:
