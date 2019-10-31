@@ -2,7 +2,7 @@ use ethereum_types::{H160, U256};
 use std::fmt::Display;
 use std::fmt::Formatter;
 
-#[derive(Debug, Default, Deserialize, Clone, PartialEq, Serialize, Hash)]
+#[derive(Debug, Default, Deserialize, Clone, PartialEq, Serialize, Hash, Eq, PartialOrd, Ord)]
 pub struct Transaction {
     /// Nonce
     pub nonce: U256,
