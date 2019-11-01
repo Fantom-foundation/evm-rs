@@ -687,6 +687,13 @@ impl VM {
         }
         println!("\nEnd of Registers");
     }
+
+    pub fn set_transaction(&mut self, transaction: Transaction, sender: H160) {
+        let code = transaction.data.clone();
+        self.code = code;
+        self.current_transaction = Some(transaction);
+        self.current_sender = Some(sender);
+    }
 }
 
 impl Default for VM {
@@ -738,15 +745,6 @@ impl Cpu<Opcode, H160> for VM {
 
     fn increase_pc(&mut self, steps: usize) {
         self.pc += steps;
-    }
-
-    fn set_instructions<J: Iterator<Item = Opcode>>(&mut self, i: J, sender: H160) {
-        let bytes: Vec<u8> = i.map(Opcode::into).collect();
-        let transaction: Transaction = serde_json::from_slice(&bytes).unwrap();
-        let code = transaction.data.clone();
-        self.code = code;
-        self.current_transaction = Some(transaction);
-        self.current_sender = Some(sender);
     }
 }
 
